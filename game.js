@@ -103,8 +103,8 @@ function goToCardSelect(){
   poolCards=[];playerCards=[];
   for(var p=0;p<playerCount;p++) playerCards.push([]);
   currentPlayer=0;
-  // Generate only 75 cards — enough for any game, fast to render
-  for(var i=1;i<=75;i++) poolCards.push(generateCard(i));
+  // Generate 400 cards for the pool
+  for(var i=1;i<=400;i++) poolCards.push(generateCard(i));
 
   // Show screen FIRST
   showScreen("cardSelectScreen");
