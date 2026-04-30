@@ -405,7 +405,7 @@ function _launchGameAfterFee(totalCards) {
   if (slider) setSpeed(slider.value);
 
   // ── 30-second countdown ───────────────────────────────────
-  var secondsLeft = 30;
+  var secondsLeft = 0;
   countdownActive = true;
 
   // Show cancel button during countdown (admin only), hide stop button
