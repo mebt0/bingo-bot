@@ -391,6 +391,13 @@
   <!-- Number grid (1-400) -->
   <div id="cardPool" class="cs-num-grid"></div>
 
+  <!-- Selected card display — shown below grid -->
+  <div class="cs-selected-bar" id="csSelectedBar" style="display:none">
+    <span class="cs-sel-label">✅ የተመረጠ ካርድ:</span>
+    <span class="cs-sel-num" id="csSelectedNum">—</span>
+    <button class="cs-sel-clear" onclick="clearSelectedCard()">✕</button>
+  </div>
+
   <!-- Bottom bar -->
   <div class="cs-bottom">
     <div id="csProgress" class="cs-progress"></div>

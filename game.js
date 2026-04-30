@@ -84,7 +84,10 @@ function onAutoToggleChange(checked) {
 }
 function flashMessage(msg,color){var el=document.createElement("div");el.className="flash-msg";el.style.background=color||"#6366f1";el.textContent=msg;document.body.appendChild(el);setTimeout(function(){el.remove();},2800);}
 
-function changePlayerCount(delta){playerCount=Math.max(1,Math.min(400,playerCount+delta));document.getElementById("playerCountDisplay").textContent=playerCount;}
+function changePlayerCount(delta){
+  playerCount=Math.max(1,Math.min(400,playerCount+delta));
+  document.getElementById("playerCountDisplay").textContent=playerCount;
+}
 
 function generateCard(id){
   var grid=[];
@@ -149,6 +152,10 @@ function goToCardSelect(){
 
     var pool = document.getElementById("cardPool");
     if(pool) pool.scrollTop = 0;
+
+    // Reset selected card bar
+    var selBar = document.getElementById("csSelectedBar");
+    if(selBar) selBar.style.display = "none";
   }, 50);
 
   speakAmharic("ካርድ ምረጡ", true);
@@ -217,15 +224,17 @@ function selectCard(cardId){
   var card = poolCards.find(function(c){ return c.id === cardId; });
   if(!card) { console.error("Card not found:", cardId); return; }
 
-  // Ensure playerCards array is initialized
   if(!playerCards[currentPlayer]) playerCards[currentPlayer] = [];
   var chosen = playerCards[currentPlayer];
 
   var idx = chosen.findIndex(function(c){ return c.id === cardId; });
   if(idx !== -1){
+    // Deselect
     chosen.splice(idx, 1);
     try { speakAmharic("ካርድ "+getAmharicName(cardId)+" ተወገደ", true); } catch(e){}
   } else {
+    // Max 1 card per user — deselect previous first
+    chosen.length = 0;
     chosen.push(card);
     try { SFX.number(); } catch(e){}
     try { speakAmharic("ካርድ "+getAmharicName(cardId)+" ተመረጠ", true); } catch(e){}
@@ -237,10 +246,22 @@ function selectCard(cardId){
   var totalCards = 0;
   for(var i = 0; i < playerCount; i++) totalCards += (playerCards[i] || []).length;
 
+  // Update selected card display bar
+  var selBar = document.getElementById("csSelectedBar");
+  var selNum = document.getElementById("csSelectedNum");
+  if(selBar && selNum){
+    if(chosen.length > 0){
+      selBar.style.display = "";
+      selNum.textContent   = "#" + chosen[0].id;
+    } else {
+      selBar.style.display = "none";
+      selNum.textContent   = "—";
+    }
+  }
+
   // Update UI
   updateCsStatus();
   renderCardPool();
-  updateSelectedPreview();
   updatePrizePreview();
 
   // Enable/disable start button (admin only)
@@ -254,6 +275,18 @@ function selectCard(cardId){
       btn.classList.remove("btn-ready");
     }
   }
+}
+
+function clearSelectedCard() {
+  if(!playerCards[currentPlayer]) return;
+  playerCards[currentPlayer] = [];
+  var selBar = document.getElementById("csSelectedBar");
+  if(selBar) selBar.style.display = "none";
+  updateCsStatus();
+  renderCardPool();
+  updatePrizePreview();
+  var btn = document.getElementById("startGameBtn");
+  if(btn){ btn.disabled = true; btn.classList.remove("btn-ready"); }
 }
 
 function updateSelectedPreview(){
