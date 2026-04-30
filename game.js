@@ -1852,7 +1852,7 @@ function doAccWithdraw() {
   var amount  = parseFloat(document.getElementById("accWdrAmount").value);
   var account = document.getElementById("accWdrAccount").value.trim();
 
-  if (isNaN(amount) || amount < 10) { showAccMsg("accWdrMsg", false, "ዝቅተኛ ማውጫ 10 ብር ነው"); return; }
+  if (isNaN(amount) || amount < 1) { showAccMsg("accWdrMsg", false, "ዝቅተኛ ማውጫ 1 ብር ነው"); return; }
   if (!account)                      { showAccMsg("accWdrMsg", false, "የሂሳብ ቁጥር ያስገቡ"); return; }
 
   var btn = document.querySelector(".btn-withdraw.acc-submit");
