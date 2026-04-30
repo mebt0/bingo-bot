@@ -75,6 +75,7 @@ input{width:100%;padding:11px 14px;background:#0f172a;border:1px solid #334155;b
 
 <div class="tabs">
   <button class="tab active" onclick="switchTab('stats')">📊 Stats</button>
+  <button class="tab" onclick="switchTab('game')">🎮 Game</button>
   <button class="tab" onclick="switchTab('pending')">⏳ Pending</button>
   <button class="tab" onclick="switchTab('txns')">📋 Transactions</button>
   <button class="tab" onclick="switchTab('users')">👥 Users</button>
@@ -84,6 +85,31 @@ input{width:100%;padding:11px 14px;background:#0f172a;border:1px solid #334155;b
 
 <div id="panel-stats" class="panel active">
   <div id="statsContent"><div id="loading">⏳ Loading...</div></div>
+</div>
+
+<div id="panel-game" class="panel">
+  <div class="card">
+    <h3 style="margin-bottom:14px;color:#f59e0b">🎮 Game Control</h3>
+    <p style="color:#94a3b8;font-size:.85rem;margin-bottom:14px">
+      Open the main game in a new tab to start/control games. Admin controls will be visible.
+    </p>
+    <a href="index.html" target="_blank" class="btn btn-gold" style="display:block;text-align:center;text-decoration:none;margin-bottom:8px">
+      🎮 Open Game (New Tab)
+    </a>
+    <a href="https://mebt0.github.io/bingo-bot/?invite=1" target="_blank" class="btn btn-blue" style="display:block;text-align:center;text-decoration:none">
+      🔗 Open Game (GitHub Pages)
+    </a>
+  </div>
+  <div class="card">
+    <h3 style="margin-bottom:10px;color:#f59e0b">📋 How It Works</h3>
+    <ul style="color:#94a3b8;font-size:.85rem;line-height:1.8;padding-left:20px">
+      <li>Users select 1 card from 400 cards (green = available, red = selected)</li>
+      <li>Admin clicks "▶ ጨዋታ ጀምር" to start game with all 400 cards</li>
+      <li>Admin controls: Call numbers, Auto mode, Pause, Stop</li>
+      <li>Users watch and declare "🏆 ቢንጎ!" when they win</li>
+      <li>Winner gets prize automatically credited to balance</li>
+    </ul>
+  </div>
 </div>
 
 <div id="panel-pending" class="panel">
@@ -188,6 +214,19 @@ if(PANEL_TOKEN){
       document.getElementById("loginSection").style.display="none";
       document.getElementById("mainSection").style.display="";
       loadStats();
+      // Auto-refresh pending every 30s
+      setInterval(function(){
+        var pendingPanel = document.getElementById("panel-pending");
+        if(pendingPanel && pendingPanel.classList.contains("active")) loadPending();
+        // Update pending badge on stats
+        api("GET","/admin/deposits/pending",null,function(e,d){
+          api("GET","/admin/withdrawals/pending",null,function(e2,w){
+            var count = ((d&&d.requests)||[]).length + ((w&&w.requests)||[]).length;
+            var tab = document.querySelector(".tab[onclick=\"switchTab('pending')\"]");
+            if(tab) tab.textContent = count > 0 ? "⏳ Pending ("+count+")" : "⏳ Pending";
+          });
+        });
+      }, 30000);
     } else {
       PANEL_TOKEN="";
       localStorage.removeItem("adminPanelToken");
@@ -196,7 +235,7 @@ if(PANEL_TOKEN){
 }
 
 function switchTab(name){
-  document.querySelectorAll(".tab").forEach(function(t,i){
+  document.querySelectorAll(".tab").forEach(function(t){
     t.classList.toggle("active", t.getAttribute("onclick")==="switchTab('"+name+"')");
   });
   document.querySelectorAll(".panel").forEach(function(p){ p.classList.remove("active"); });
