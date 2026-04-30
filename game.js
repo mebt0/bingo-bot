@@ -1752,17 +1752,25 @@ function doAccDeposit() {
   if (isNaN(amount) || amount < 1) { showAccMsg("accDepMsg", false, "ትክክለኛ መጠን ያስገቡ"); return; }
   if (!txId)                        { showAccMsg("accDepMsg", false, "የTeleBirr ማስተላለፊያ ቁጥር ያስገቡ"); return; }
 
+  var btn = document.querySelector(".btn-deposit.acc-submit");
+  if (btn) { btn.disabled = true; btn.textContent = "⏳..."; }
+
   showAccMsg("accDepMsg", true, "⏳ እየተሰራ ነው...");
 
   apiCall("POST", "/wallet/deposit/request", { amount: amount, tx_id: txId }, function(err, data) {
+    if (btn) { btn.disabled = false; btn.textContent = "💵 ገቢ ጠይቅ"; }
     if (err || !data || !data.ok) {
       showAccMsg("accDepMsg", false, data ? data.msg : "ኔትወርክ ስህተት");
       return;
     }
-    showAccMsg("accDepMsg", true, "ጥያቄ ተልኳል ⏳ — አስተዳዳሪ ካረጋገጠ ሂሳብዎ ይሞላል (TXN: " + txId + ")");
+    showAccMsg("accDepMsg", true,
+      "✅ ጥያቄ ተልኳል! " + fmtMoney(amount) + " — TXN: " + txId +
+      "\n⏳ አስተዳዳሪ ሲያረጋግጥ ሂሳብዎ ይጨምራል");
     document.getElementById("accDepAmount").value = "";
     document.getElementById("accDepTxId").value   = "";
     SFX.number();
+    // Refresh history to show pending request
+    setTimeout(function() { refreshAccountScreen(); }, 500);
   });
 }
 
@@ -1775,6 +1783,9 @@ function doAccWithdraw() {
   if (isNaN(amount) || amount < 10) { showAccMsg("accWdrMsg", false, "ዝቅተኛ ማውጫ 10 ብር ነው"); return; }
   if (!account)                      { showAccMsg("accWdrMsg", false, "የሂሳብ ቁጥር ያስገቡ"); return; }
 
+  var btn = document.querySelector(".btn-withdraw.acc-submit");
+  if (btn) { btn.disabled = true; btn.textContent = "⏳..."; }
+
   showAccMsg("accWdrMsg", true, "⏳ እየተሰራ ነው...");
 
   apiCall("POST", "/wallet/withdraw/request", {
@@ -1782,15 +1793,19 @@ function doAccWithdraw() {
     account_type:   selectedWdrMethod || "telebirr",
     account_number: account
   }, function(err, data) {
+    if (btn) { btn.disabled = false; btn.textContent = "💸 ወጪ ጠይቅ"; }
     if (err || !data || !data.ok) {
       showAccMsg("accWdrMsg", false, data ? data.msg : "ኔትወርክ ስህተት");
       return;
     }
-    showAccMsg("accWdrMsg", true, fmtMoney(amount) + " ወጪ ጥያቄ ተልኳል → " + (selectedWdrMethod || "telebirr") + " " + account);
+    showAccMsg("accWdrMsg", true,
+      "✅ " + fmtMoney(amount) + " ወጪ ጥያቄ ተልኳል → " + (selectedWdrMethod || "telebirr") + " " + account +
+      "\n⚠️ ሂሳብዎ ቀድሞ ተቀንሷል — አስተዳዳሪ ሲያረጋግጥ ይላካል");
     document.getElementById("accWdrAmount").value  = "";
     document.getElementById("accWdrAccount").value = "";
-    refreshUserBar();
     SFX.number();
+    // Refresh balance and history immediately (balance already deducted)
+    setTimeout(function() { refreshAccountScreen(); refreshUserBar(); }, 500);
   });
 }
 

@@ -552,27 +552,44 @@ function renderAccHistory(history) {
     return;
   }
   var typeLabels = {
-    deposit:      "💵 ገቢ",
-    prize:        "🏆 ሽልማት",
-    entry_fee:    "🎮 ካርድ ክፍያ",
-    withdraw:     "💸 ወጪ",
-    withdraw_hold:"💸 ወጪ (ተያዘ)",
-    refund:       "↩️ ተመላሽ"
+    deposit:       "💵 ገቢ",
+    prize:         "🏆 ሽልማት",
+    entry_fee:     "🎮 ካርድ ክፍያ",
+    withdraw:      "💸 ወጪ",
+    withdraw_hold: "💸 ወጪ (ተያዘ)",
+    refund:        "↩️ ተመላሽ"
   };
+  var creditTypes = { deposit: true, prize: true, refund: true };
+
   var html = "";
   history.forEach(function(t) {
+    var isCredit = !!creditTypes[t.type];
+    var sign     = isCredit ? "+" : "-";
+    var color    = isCredit ? "#22c55e" : "#ef4444";
+
     var dateStr = t.date || t.created_at || "";
-    // Format date nicely if possible
     try {
       var d = new Date(dateStr);
-      if (!isNaN(d)) dateStr = d.toLocaleDateString("am-ET") + " " + d.toLocaleTimeString("am-ET", {hour:"2-digit", minute:"2-digit"});
+      if (!isNaN(d)) dateStr = d.toLocaleDateString() + " " + d.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
     } catch(e) {}
+
+    var balAfter = t.balance || t.balance_after;
 
     html +=
       '<div class="hist-item">' +
-        '<span class="hi-type">' + (typeLabels[t.type] || t.type) + '</span>' +
+        '<div style="display:flex;justify-content:space-between;align-items:center">' +
+          '<span class="hi-type">' + (typeLabels[t.type] || t.type) + '</span>' +
+          '<span style="font-size:.95rem;font-weight:900;color:' + color + '">' +
+            sign + fmtMoney(t.amount) +
+          '</span>' +
+        '</div>' +
         (t.note ? '<span class="hi-note">' + t.note + '</span>' : '') +
-        '<span class="hi-date">' + dateStr + '</span>' +
+        '<div style="display:flex;justify-content:space-between;margin-top:2px">' +
+          '<span class="hi-date">' + dateStr + '</span>' +
+          (balAfter !== undefined
+            ? '<span style="font-size:.7rem;color:#64748b">ቀሪ: ' + fmtMoney(balAfter) + '</span>'
+            : '') +
+        '</div>' +
       '</div>';
   });
   el.innerHTML = html;
