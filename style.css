@@ -2597,11 +2597,11 @@ button:disabled { opacity:.4; cursor:not-allowed; transform:none; }
 }
 .cs-num-btn:active { transform: scale(.9); }
 
-/* Selected — orange like the image */
+/* Selected — green */
 .cs-num-btn.cs-num-selected {
-  background: #e74c3c;
+  background: #22c55e;
   color: white;
-  box-shadow: 0 2px 8px rgba(231,76,60,.4);
+  box-shadow: 0 2px 8px rgba(34,197,94,.4);
 }
 
 /* Bottom bar */
