@@ -343,31 +343,13 @@ function launchGame(){
   }
   clearTimeout(autoLoopTimer);
 
-  // Use ALL 400 pool cards for the game (regardless of what admin selected)
+  // Use ALL 400 pool cards for the game
   playerCards[0] = poolCards.slice();
   var totalCards = 400;
 
-  if (currentUser) {
-    deductEntryFee(currentUser.phone, totalCards, function(feeResult) {
-      if (!feeResult.ok) {
-        // Show balance error with deposit button
-        var msg = feeResult.msg || "ቀሪ ሂሳብ በቂ አይደለም";
-        flashMessage("❌ " + msg, "#ef4444");
-        speakDirect("ቀሪ ሂሳብ በቂ አይደለም");
-        // Show deposit prompt after 1 second
-        setTimeout(function() {
-          if (confirm("💰 ሂሳብ ለመሙላት ወደ አካውንት ይሂዱ?")) {
-            openMyAccount();
-          }
-        }, 500);
-        return;
-      }
-      refreshUserBar();
-      _launchGameAfterFee(totalCards);
-    });
-  } else {
-    _launchGameAfterFee(totalCards);
-  }
+  // Admin does NOT pay entry fee — players pay when they select their card
+  // Just launch the game directly
+  _launchGameAfterFee(totalCards);
 }
 
 function _launchGameAfterFee(totalCards) {
