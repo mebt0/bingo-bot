@@ -11,6 +11,94 @@
 </head>
 <body>
 
+<!-- ══════════════ LOGIN SCREEN ══════════════ -->
+<div id="loginScreen" class="login-screen">
+
+  <div class="login-bg">
+    <div class="bg-ball b1">B</div>
+    <div class="bg-ball b2">I</div>
+    <div class="bg-ball b3">N</div>
+    <div class="bg-ball b4">G</div>
+    <div class="bg-ball b5">O</div>
+  </div>
+
+  <div class="login-box">
+    <div class="login-header">
+      <div class="login-logo-wrap">
+        <div class="login-logo-ring"></div>
+        <div class="login-logo">🎯</div>
+      </div>
+      <h1 class="login-title">ኣድዋ ቢንጎ</h1>
+      <div class="login-badges">
+        <span class="lbadge lbadge-green">🟢 Live</span>
+        <span class="lbadge lbadge-gold">💰 10 ብር/ካርድ</span>
+      </div>
+    </div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="atab-login"    onclick="authTab('login')">🔑 ግባ</button>
+      <button class="auth-tab"        id="atab-register" onclick="authTab('register')">✨ ምዝገባ</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div class="auth-panel active" id="apanel-login">
+      <div class="login-form">
+        <div class="input-group">
+          <span class="input-icon">📱</span>
+          <input type="tel" id="loginPhone" placeholder="ስልክ ቁጥር — 09xxxxxxxx"
+                 class="login-input" maxlength="13" oninput="fmtPhone(this)"
+                 onkeydown="if(event.key==='Enter')doLogin()"/>
+        </div>
+        <div class="input-group">
+          <span class="input-icon">🔒</span>
+          <input type="password" id="loginPass" placeholder="የይለፍ ቃል"
+                 class="login-input" maxlength="20"
+                 onkeydown="if(event.key==='Enter')doLogin()"/>
+          <button class="eye-btn" onclick="togglePwd('loginPass',this)" tabindex="-1">👁</button>
+        </div>
+        <div id="loginError" class="auth-error hidden"></div>
+        <button class="btn-login" id="loginSubmitBtn" onclick="doLogin()">
+          <span class="btn-login-icon">🔑</span> ግባ
+        </button>
+      </div>
+    </div>
+
+    <!-- REGISTER -->
+    <div class="auth-panel" id="apanel-register">
+      <div class="login-form">
+        <div class="input-group">
+          <span class="input-icon">📱</span>
+          <input type="tel" id="regPhone" placeholder="ስልክ ቁጥር — 09xxxxxxxx"
+                 class="login-input" maxlength="13" oninput="fmtPhone(this)"
+                 onkeydown="if(event.key==='Enter')doRegisterAuth()"/>
+        </div>
+        <div class="input-group">
+          <span class="input-icon">🔒</span>
+          <input type="password" id="regPass" placeholder="የይለፍ ቃል (ቢያንስ 4 ቁጥር)"
+                 class="login-input" maxlength="20"
+                 onkeydown="if(event.key==='Enter')doRegisterAuth()"/>
+          <button class="eye-btn" onclick="togglePwd('regPass',this)" tabindex="-1">👁</button>
+        </div>
+        <div class="input-group">
+          <span class="input-icon">✅</span>
+          <input type="password" id="regPass2" placeholder="የይለፍ ቃል ያረጋግጡ"
+                 class="login-input" maxlength="20"
+                 onkeydown="if(event.key==='Enter')doRegisterAuth()"/>
+          <button class="eye-btn" onclick="togglePwd('regPass2',this)" tabindex="-1">👁</button>
+        </div>
+        <div id="registerError" class="auth-error hidden"></div>
+        <button class="btn-login btn-register" id="regSubmitBtn" onclick="doRegisterAuth()">
+          <span class="btn-login-icon">✨</span> ምዝገባ
+        </button>
+      </div>
+    </div>
+
+    <div class="login-footer">
+      <p class="login-hint">⚠️ ይህ ጨዋታ ለ18+ ዓመት ብቻ ነው</p>
+    </div>
+  </div>
+</div>
+
 <!-- ══════════════ LOGOUT CONFIRM DIALOG ══════════════ -->
 <div id="logoutDialog" class="dialog-overlay hidden">
   <div class="dialog-box logout-dialog">
@@ -25,7 +113,7 @@
 </div>
 
 <!-- ══════════════ MAIN MENU ══════════════ -->
-<div id="mainMenu" class="screen active">
+<div id="mainMenu" class="screen">
 
   <!-- User bar -->
   <div class="user-bar">

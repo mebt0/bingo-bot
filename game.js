@@ -1499,8 +1499,7 @@ function isAdminPhone(phone) {
   return false;
 }
 
-// ── Auto-login — no login screen needed ──────────────────────
-// Uses Telegram user ID as phone, auto-registers on first visit
+// ── Auto-login — Telegram WebApp or show login screen ────────
 function autoLogin() {
   // 1. Try existing token first
   var token = getToken();
@@ -1511,59 +1510,47 @@ function autoLogin() {
       } else {
         clearToken();
         clearPanelToken();
-        _doAutoRegisterOrLogin();
+        _tryTelegramLogin();
       }
     });
     return;
   }
-  _doAutoRegisterOrLogin();
+  _tryTelegramLogin();
 }
 
-function _doAutoRegisterOrLogin() {
-  // Build identity from Telegram WebApp or fallback
-  var tg   = window.Telegram && window.Telegram.WebApp;
+function _tryTelegramLogin() {
+  // Try Telegram auto-login
+  var tg     = window.Telegram && window.Telegram.WebApp;
   var tgUser = tg && tg.initDataUnsafe && tg.initDataUnsafe.user;
 
-  var phone, name, pass;
   if (tgUser) {
-    phone = "tg_" + tgUser.id;
-    name  = ((tgUser.first_name || "") + (tgUser.last_name ? " " + tgUser.last_name : "")).trim()
-            || tgUser.username || phone;
-    pass  = "tg_" + tgUser.id + "_bingo";
-  } else {
-    // Fallback: use stored device ID
-    var devId = localStorage.getItem("bingoDevId");
-    if (!devId) {
-      devId = "dev_" + Math.random().toString(36).substr(2, 9);
-      localStorage.setItem("bingoDevId", devId);
-    }
-    phone = devId;
-    name  = "ተጫዋች";
-    pass  = devId + "_bingo";
-  }
+    // Auto-login with Telegram ID
+    var phone = "tg_" + tgUser.id;
+    var name  = ((tgUser.first_name || "") + (tgUser.last_name ? " " + tgUser.last_name : "")).trim()
+                || tgUser.username || phone;
+    var pass  = "tg_" + tgUser.id + "_bingo";
 
-  // Try login first, register if not found
-  apiCall("POST", "/auth/login", { phone: phone, password: pass }, function(err, data) {
-    if (data && data.ok) {
-      setToken(data.token);
-      loginSuccess(data.user);
-    } else {
-      // Register new user
-      apiCall("POST", "/auth/register", { phone: phone, password: pass, full_name: name }, function(err2, data2) {
-        if (data2 && data2.ok) {
-          setToken(data2.token);
-          loginSuccess(data2.user);
-        } else {
-          // Backend unreachable — show offline mode
-          flashMessage("⚠️ Backend ይሰራ እንደሆነ ያረጋግጡ", "#f59e0b");
-          // Still show main menu with guest user
-          currentUser = { phone: phone, name: name, balance: 0, isAdmin: false };
-          _applyUserToUI();
-          showScreen("mainMenu");
-        }
-      });
-    }
-  });
+    apiCall("POST", "/auth/login", { phone: phone, password: pass }, function(err, data) {
+      if (data && data.ok) {
+        setToken(data.token);
+        loginSuccess(data.user);
+      } else {
+        // Register new Telegram user
+        apiCall("POST", "/auth/register", { phone: phone, password: pass, full_name: name }, function(err2, data2) {
+          if (data2 && data2.ok) {
+            setToken(data2.token);
+            loginSuccess(data2.user);
+          } else {
+            // Show login screen as fallback
+            showScreen("loginScreen");
+          }
+        });
+      }
+    });
+  } else {
+    // No Telegram — show login screen
+    showScreen("loginScreen");
+  }
 }
 
 // ── Login success ─────────────────────────────────────────────
@@ -1602,6 +1589,16 @@ function _applyUserToUI() {
   if (phoneEl) phoneEl.textContent = currentUser.phone;
   if (balEl)   balEl.textContent   = fmtMoney(currentUser.balance);
   if (adminBtn) adminBtn.style.display = currentUser.isAdmin ? "" : "none";
+  updateFooterBalances();
+}
+
+function updateFooterBalances() {
+  if (!currentUser) return;
+  var footerBal = document.getElementById("footerBalance");
+  var footerLive = document.getElementById("footerLiveBalance");
+  var value = fmtMoney(currentUser.balance || 0);
+  if (footerBal)  footerBal.textContent  = value;
+  if (footerLive) footerLive.textContent = value;
 }
 
 // ── Logout — just re-run auto-login (no login screen) ────────
@@ -1619,15 +1616,18 @@ function confirmLogout() {
   clearToken();
   clearPanelToken();
   localStorage.removeItem("bingoSession");
-  localStorage.removeItem("bingoDevId");
   currentUser = null;
 
   var adminBtn = document.getElementById("adminPanelBtn_menu");
   if (adminBtn) adminBtn.style.display = "none";
 
-  flashMessage("👋 ወጥተዋል — እንደገና ይጀምሩ", "#6366f1");
-  // Re-login automatically
-  setTimeout(autoLogin, 800);
+  // Clear login form
+  var lp = document.getElementById("loginPhone"); if (lp) lp.value = "";
+  var lpass = document.getElementById("loginPass"); if (lpass) lpass.value = "";
+  var le = document.getElementById("loginError"); if (le) le.classList.add("hidden");
+
+  showScreen("loginScreen");
+  flashMessage("👋 ወጥተዋል", "#6366f1");
 }
 
 function cancelLogout() {
@@ -1637,10 +1637,73 @@ function cancelLogout() {
 
 // ── Legacy stubs (kept for compatibility) ────────────────────
 function checkSession() { autoLogin(); }
-function doLogin() {}
-function doRegisterAuth() {}
-function authTab() {}
-function showAuthError() {}
+
+// ── Real login/register (phone + password) ───────────────────
+function doLogin() {
+  var phone = (document.getElementById("loginPhone") ? document.getElementById("loginPhone").value : "").trim();
+  var pass  = (document.getElementById("loginPass")  ? document.getElementById("loginPass").value  : "");
+  var errEl = document.getElementById("loginError");
+  if (errEl) errEl.classList.add("hidden");
+
+  if (!phone) { showAuthError("loginError", "ስልክ ቁጥር ያስገቡ"); return; }
+  if (!pass)  { showAuthError("loginError", "የይለፍ ቃል ያስገቡ"); return; }
+
+  var btn = document.getElementById("loginSubmitBtn");
+  if (btn) { btn.disabled = true; btn.textContent = "⏳ እየተሰራ..."; }
+
+  apiCall("POST", "/auth/login", { phone: phone, password: pass }, function(err, data) {
+    if (btn) { btn.disabled = false; btn.textContent = "🔑 ግባ"; }
+    if (err || !data || !data.ok) {
+      showAuthError("loginError", data ? data.msg : "ኔትወርክ ስህተት");
+      return;
+    }
+    setToken(data.token);
+    loginSuccess(data.user);
+  });
+}
+
+function doRegisterAuth() {
+  var phone = (document.getElementById("regPhone")  ? document.getElementById("regPhone").value  : "").trim();
+  var pass  = (document.getElementById("regPass")   ? document.getElementById("regPass").value   : "");
+  var pass2 = (document.getElementById("regPass2")  ? document.getElementById("regPass2").value  : "");
+  var errEl = document.getElementById("registerError");
+  if (errEl) errEl.classList.add("hidden");
+
+  if (!phone || phone.length < 10) { showAuthError("registerError", "ትክክለኛ ስልክ ቁጥር ያስገቡ"); return; }
+  if (pass.length < 4)             { showAuthError("registerError", "የይለፍ ቃል ቢያንስ 4 ቁጥር"); return; }
+  if (pass !== pass2)              { showAuthError("registerError", "የይለፍ ቃሎቹ አይዛመዱም"); return; }
+
+  var btn = document.getElementById("regSubmitBtn");
+  if (btn) { btn.disabled = true; btn.textContent = "⏳ እየተሰራ..."; }
+
+  apiCall("POST", "/auth/register", { phone: phone, password: pass, full_name: phone }, function(err, data) {
+    if (btn) { btn.disabled = false; btn.textContent = "✨ ምዝገባ"; }
+    if (err || !data || !data.ok) {
+      showAuthError("registerError", data ? data.msg : "ኔትወርክ ስህተት");
+      return;
+    }
+    setToken(data.token);
+    loginSuccess(data.user);
+  });
+}
+
+function authTab(name) {
+  document.querySelectorAll(".auth-tab").forEach(function(t){ t.classList.remove("active"); });
+  document.querySelectorAll(".auth-panel").forEach(function(p){ p.classList.remove("active"); });
+  var tab = document.getElementById("atab-" + name);
+  var panel = document.getElementById("apanel-" + name);
+  if (tab)   tab.classList.add("active");
+  if (panel) panel.classList.add("active");
+  var le = document.getElementById("loginError");    if (le) le.classList.add("hidden");
+  var re = document.getElementById("registerError"); if (re) re.classList.add("hidden");
+}
+
+function showAuthError(elId, msg) {
+  var el = document.getElementById(elId);
+  if (!el) return;
+  el.textContent = "❌ " + msg;
+  el.classList.remove("hidden");
+}
 
 // ── Update balance bar whenever wallet changes ────────────────
 function refreshUserBar() {
@@ -1650,6 +1713,7 @@ function refreshUserBar() {
     currentUser.balance = data.balance;
     var el = document.getElementById("userBarBalance");
     if (el) el.textContent = fmtMoney(data.balance);
+    updateFooterBalances();
   });
 }
 
