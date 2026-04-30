@@ -5,9 +5,9 @@
 var playerCount=1,poolCards=[],playerCards=[],currentPlayer=0;
 var cards=[],calledNumbers=[],remainingNums=[],gameActive=false;
 var autoMode=false,isPaused=false,autoLoopTimer=null;
-var AUTO_INTERVAL=4000,probMode="balanced",numberWeights={};
-// Speed: 1=fastest(2s) 5=slowest(12s)
-var callSpeed=3;
+var AUTO_INTERVAL=2000,probMode="balanced",numberWeights={};
+// Fixed speed: ፈጣን (2 seconds)
+var callSpeed=1;
 // Prize pool for current game
 var currentPrizePool=0;
 
@@ -534,16 +534,11 @@ function weightedDraw(){
 }
 
 function setSpeed(val){
-  callSpeed = parseInt(val);
-  // 1=fastest(2s)  2=fast(4s)  3=medium(7s)  4=slow(11s)  5=slowest(16s)
-  var intervals = [2000, 4000, 7000, 11000, 16000];
-  var labels    = ["⚡ ፈጣን", "🔥 ፈጣን", "⚖️ መካከለኛ", "🐢 ዘገምተኛ", "🐌 በጣም ዘገምተኛ"];
-  AUTO_INTERVAL = intervals[callSpeed - 1] || 7000;
+  // Fixed speed — always ፈጣን (fast = 2 seconds)
+  callSpeed     = 1;
+  AUTO_INTERVAL = 2000;
   var el = document.getElementById("speedLabel");
-  if (el) el.textContent = labels[callSpeed - 1] || "⚖️ መካከለኛ";
-  // Update slider position to match
-  var slider = document.getElementById("speedSlider");
-  if (slider && slider.value !== String(callSpeed)) slider.value = callSpeed;
+  if (el) el.textContent = "⚡ ፈጣን";
 }
 
 function scheduleNext(){
