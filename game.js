@@ -1671,6 +1671,7 @@ function doRegisterAuth() {
 
   if (!phone || phone.length < 10) { showAuthError("registerError", "ትክክለኛ ስልክ ቁጥር ያስገቡ"); return; }
   if (pass.length < 4)             { showAuthError("registerError", "የይለፍ ቃል ቢያንስ 4 ቁጥር"); return; }
+  if (pass !== pass2)              { showAuthError("registerError", "የይለፍ ቃሎቹ አይዛመዱም"); return; }
 
   var btn = document.getElementById("regSubmitBtn");
   if (btn) { btn.disabled = true; btn.textContent = "⏳ እየተሰራ..."; }
