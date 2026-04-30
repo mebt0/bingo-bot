@@ -106,10 +106,17 @@ function goToCardSelect(){
   // Generate 400 cards for the pool
   for(var i=1;i<=400;i++) poolCards.push(generateCard(i));
 
-  // Show screen FIRST
-  showScreen("cardSelectScreen");
+  // Auto-select ALL 400 cards for player 0
+  playerCards[0] = poolCards.slice(); // all 400
 
-  // Render after screen is visible
+  // Admin: go straight to game launch
+  if(currentUserIsAdmin()){
+    launchGame();
+    return;
+  }
+
+  // Non-admin: show card select screen (read-only view)
+  showScreen("cardSelectScreen");
   setTimeout(function() {
     buildPlayerTabs();
     renderCardPool();
@@ -117,20 +124,11 @@ function goToCardSelect(){
     updatePrizePreview();
 
     var startBtn = document.getElementById("startGameBtn");
-    if(startBtn){
-      if(currentUserIsAdmin()){
-        startBtn.style.display = "";
-        startBtn.disabled = true;
-        startBtn.classList.remove("btn-ready");
-      } else {
-        // Non-admin: hide start button, show waiting message
-        startBtn.style.display = "none";
-        var prog = document.getElementById("csProgress");
-        if(prog) prog.innerHTML = '<span class="prog-count" style="color:#f59e0b">⏳ አስተዳዳሪ ጨዋታ ሲጀምር ይጠብቁ...</span>';
-      }
-    }
+    if(startBtn) startBtn.style.display = "none";
 
-    // Balance display
+    var prog = document.getElementById("csProgress");
+    if(prog) prog.innerHTML = '<span class="prog-count" style="color:#f59e0b">⏳ አስተዳዳሪ ጨዋታ ሲጀምር ይጠብቁ...</span>';
+
     var csBalEl = document.getElementById("csBalanceAmt");
     if (csBalEl) {
       csBalEl.textContent = currentUser ? fmtMoney(currentUser.balance || 0) : "—";
