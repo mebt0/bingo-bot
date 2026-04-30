@@ -5,8 +5,8 @@
 var playerCount=1,poolCards=[],playerCards=[],currentPlayer=0;
 var cards=[],calledNumbers=[],remainingNums=[],gameActive=false;
 var autoMode=false,isPaused=false,autoLoopTimer=null;
-var AUTO_INTERVAL=2000,probMode="balanced",numberWeights={};
-// Fixed speed: ፈጣን (2 seconds)
+var AUTO_INTERVAL=1000,probMode="balanced",numberWeights={};
+// Fixed speed: ፈጣን (1 second)
 var callSpeed=1;
 // Prize pool for current game
 var currentPrizePool=0;
@@ -536,7 +536,7 @@ function weightedDraw(){
 function setSpeed(val){
   // Fixed speed — always ፈጣን (fast = 2 seconds)
   callSpeed     = 1;
-  AUTO_INTERVAL = 2000;
+  AUTO_INTERVAL = 1000;
   var el = document.getElementById("speedLabel");
   if (el) el.textContent = "⚡ ፈጣን";
 }
