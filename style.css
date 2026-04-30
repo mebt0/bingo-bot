@@ -2183,3 +2183,322 @@ button:disabled { opacity:.4; cursor:not-allowed; transform:none; }
 .txn-status.txn-rejected { color: #ef4444; }
 .txn-date { font-size: .7rem; color: #64748b; margin-left: auto; }
 .txn-note { font-size: .68rem; color: #64748b; font-style: italic; width: 100%; }
+
+/* ══════════════════════════════════════════════════════════
+   GAME SCREEN — Beteseb-style layout
+   ══════════════════════════════════════════════════════════ */
+
+#gameScreen.gs-layout {
+  display: flex;
+  flex-direction: column;
+  height: var(--tg-viewport-stable-height, 100vh);
+  padding: 0;
+  overflow: hidden;
+  background: #1a1a2e;
+}
+
+/* ── Top stats bar ── */
+.gs-topbar {
+  display: flex;
+  gap: 4px;
+  padding: 6px 8px;
+  background: #16213e;
+  border-bottom: 1px solid #0f3460;
+  flex-shrink: 0;
+}
+.gs-stat-box {
+  flex: 1;
+  background: #0f3460;
+  border-radius: 6px;
+  padding: 4px 6px;
+  text-align: center;
+}
+.gs-stat-label {
+  font-size: .58rem;
+  color: #94a3b8;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .3px;
+}
+.gs-stat-val {
+  font-size: .85rem;
+  font-weight: 900;
+  color: #f1f5f9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Main body ── */
+.gs-body {
+  display: flex;
+  flex: 1 1 0;
+  min-height: 0;
+  gap: 0;
+}
+
+/* ── Left: number board ── */
+.gs-left {
+  width: 52%;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #0f3460;
+  overflow: hidden;
+}
+
+.gs-col-headers {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 2px;
+  padding: 4px 4px 2px;
+  flex-shrink: 0;
+}
+.gs-col-hdr {
+  text-align: center;
+  font-size: .85rem;
+  font-weight: 900;
+  color: white;
+  padding: 4px 0;
+  border-radius: 4px;
+}
+.gs-col-hdr.col-b { background: #3b82f6; }
+.gs-col-hdr.col-i { background: #8b5cf6; }
+.gs-col-hdr.col-n { background: #22c55e; }
+.gs-col-hdr.col-g { background: #f59e0b; color: #1e293b; }
+.gs-col-hdr.col-o { background: #ef4444; }
+
+/* Number board grid: 5 cols × 15 rows */
+.gs-number-board {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 2px;
+  padding: 2px 4px 4px;
+  flex: 1;
+  overflow-y: auto;
+}
+.gs-nb-btn {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .78rem;
+  font-weight: 700;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  background: #1e293b;
+  color: #cbd5e1;
+  transition: background .15s, transform .1s;
+  font-family: inherit;
+}
+.gs-nb-btn:active { transform: scale(.92); }
+.gs-nb-btn.gs-nb-b { color: #93c5fd; }
+.gs-nb-btn.gs-nb-i { color: #c4b5fd; }
+.gs-nb-btn.gs-nb-n { color: #86efac; }
+.gs-nb-btn.gs-nb-g { color: #fcd34d; }
+.gs-nb-btn.gs-nb-o { color: #fca5a5; }
+
+/* Called number — highlighted like image */
+.gs-nb-btn.gs-called {
+  color: white !important;
+  font-weight: 900;
+}
+.gs-nb-btn.gs-called.gs-nb-b { background: #3b82f6; }
+.gs-nb-btn.gs-called.gs-nb-i { background: #8b5cf6; }
+.gs-nb-btn.gs-called.gs-nb-n { background: #22c55e; }
+.gs-nb-btn.gs-called.gs-nb-g { background: #f59e0b; color: #1e293b !important; }
+.gs-nb-btn.gs-called.gs-nb-o { background: #ef4444; }
+
+/* ── Right panel ── */
+.gs-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 8px;
+  gap: 8px;
+  overflow-y: auto;
+}
+
+/* Recent balls row */
+.gs-balls-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+  min-height: 32px;
+}
+.gs-ball-chip {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .65rem;
+  font-weight: 900;
+  color: white;
+  border: 2px solid rgba(255,255,255,.3);
+  flex-shrink: 0;
+}
+.gs-ball-chip.bc-b { background: #3b82f6; }
+.gs-ball-chip.bc-i { background: #8b5cf6; }
+.gs-ball-chip.bc-n { background: #22c55e; }
+.gs-ball-chip.bc-g { background: #f59e0b; color: #1e293b; }
+.gs-ball-chip.bc-o { background: #ef4444; }
+
+/* Big ball */
+.gs-big-ball-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.gs-big-ball {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fff8, transparent 60%),
+              linear-gradient(135deg, #f8fafc, #e2e8f0);
+  border: 4px solid #f59e0b;
+  box-shadow: 0 0 24px rgba(245,158,11,.5), inset 0 2px 8px rgba(255,255,255,.6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  animation: ball-pop .3s ease;
+}
+@keyframes ball-pop {
+  0%   { transform: scale(.7); opacity: .5; }
+  70%  { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.gs-big-ball-col {
+  font-size: .9rem;
+  font-weight: 900;
+  color: #6366f1;
+  line-height: 1;
+}
+.gs-big-ball-num {
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: #6366f1;
+  line-height: 1;
+}
+
+/* Admin controls */
+.gs-admin-controls {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+.gs-auto-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #1e293b;
+  border-radius: 20px;
+  padding: 8px 16px;
+  width: 100%;
+  justify-content: space-between;
+  font-size: .85rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  cursor: pointer;
+}
+.gs-toggle-wrap { position: relative; width: 44px; height: 24px; }
+.gs-toggle-wrap input { opacity: 0; width: 0; height: 0; }
+.gs-toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: #334155;
+  border-radius: 24px;
+  transition: .3s;
+  cursor: pointer;
+}
+.gs-toggle-slider::before {
+  content: '';
+  position: absolute;
+  width: 18px; height: 18px;
+  left: 3px; top: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: .3s;
+}
+.gs-toggle-wrap input:checked + .gs-toggle-slider { background: #22c55e; }
+.gs-toggle-wrap input:checked + .gs-toggle-slider::before { transform: translateX(20px); }
+
+.gs-admin-btns {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+  justify-content: center;
+}
+.gs-btn-call  { flex:1; padding:8px 4px; background:#22c55e; color:white; border:none; border-radius:8px; font-weight:800; font-size:.8rem; cursor:pointer; font-family:inherit; }
+.gs-btn-pause { flex:1; padding:8px 4px; background:#f59e0b; color:#1e293b; border:none; border-radius:8px; font-weight:800; font-size:.8rem; cursor:pointer; font-family:inherit; }
+.gs-btn-stop  { flex:1; padding:8px 4px; background:#ef4444; color:white; border:none; border-radius:8px; font-weight:800; font-size:.8rem; cursor:pointer; font-family:inherit; }
+.gs-btn-cancel{ flex:1; padding:8px 4px; background:#64748b; color:white; border:none; border-radius:8px; font-weight:800; font-size:.8rem; cursor:pointer; font-family:inherit; }
+
+/* Watching message */
+.gs-watching {
+  width: 100%;
+  background: #1e293b;
+  border-radius: 12px;
+  padding: 16px 12px;
+  text-align: center;
+}
+.gs-watching-title {
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: #f1f5f9;
+  margin-bottom: 8px;
+}
+.gs-watching-msg {
+  font-size: .85rem;
+  color: #94a3b8;
+  line-height: 1.5;
+}
+
+/* Bingo button */
+.gs-btn-bingo {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 900;
+  cursor: pointer;
+  font-family: inherit;
+  box-shadow: 0 4px 12px rgba(245,158,11,.4);
+}
+
+/* ── Bottom bar ── */
+.gs-bottom-bar {
+  display: flex;
+  gap: 6px;
+  padding: 8px;
+  background: #16213e;
+  border-top: 1px solid #0f3460;
+  flex-shrink: 0;
+}
+.gs-btn-leave   { flex:1; padding:10px 4px; background:#ef4444; color:white; border:none; border-radius:8px; font-weight:800; font-size:.82rem; cursor:pointer; font-family:inherit; }
+.gs-btn-refresh { flex:1; padding:10px 4px; background:#334155; color:#f1f5f9; border:none; border-radius:8px; font-weight:700; font-size:.82rem; cursor:pointer; font-family:inherit; }
+.gs-btn-auto-bottom { flex:2; padding:10px 4px; background:#f59e0b; color:#1e293b; border:none; border-radius:8px; font-weight:800; font-size:.82rem; cursor:pointer; font-family:inherit; }
+.gs-btn-mute    { flex:0 0 40px; padding:10px 4px; background:#334155; color:#f1f5f9; border:none; border-radius:8px; font-weight:700; font-size:.9rem; cursor:pointer; font-family:inherit; }
+
+/* ── Cards section ── */
+.gs-cards-section {
+  padding: 8px;
+  background: #1a1a2e;
+}
+.gs-cards-label {
+  font-size: .8rem;
+  font-weight: 700;
+  color: #94a3b8;
+  margin-bottom: 6px;
+}

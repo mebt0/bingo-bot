@@ -61,24 +61,26 @@ function endGame(){
 // ── Hide/show game controls based on admin status ─────────────
 function applyGameControlVisibility() {
   var isAdmin = currentUserIsAdmin();
-  // Buttons only admin can use
-  var adminOnly = ["callBtn", "autoBtn", "pauseBtn", "stopGameBtn",
-                   "cancelCountdownBtn", "autoBtnBoard"];
-  adminOnly.forEach(function(id) {
-    var el = document.getElementById(id);
-    if (!el) return;
-    if (!isAdmin) el.style.display = "none";
-  });
-  // Speed control — admin only
-  var speedCtrl = document.querySelector(".speed-control");
-  if (speedCtrl) speedCtrl.style.display = isAdmin ? "" : "none";
-  // Number board cells — disable for non-admins
+  var adminCtrl   = document.getElementById("gsAdminControls");
+  var watchingDiv = document.getElementById("gsWatching");
+  if(adminCtrl)   adminCtrl.style.display   = isAdmin ? "" : "none";
+  if(watchingDiv) watchingDiv.style.display = isAdmin ? "none" : "";
+  // Number board — disable clicks for non-admins
   var board = document.getElementById("numberBoard");
-  if (board) {
-    board.querySelectorAll(".nb-btn").forEach(function(btn) {
-      if (!isAdmin) btn.disabled = true;
+  if(board){
+    board.querySelectorAll(".gs-nb-btn").forEach(function(btn){
+      if(!isAdmin) btn.disabled = true;
     });
   }
+}
+
+function onAutoToggleChange(checked) {
+  if(!gameActive) return;
+  if(!currentUserIsAdmin()){ flashMessage("❌ አስተዳዳሪ ብቻ","#ef4444"); return; }
+  autoMode = checked;
+  updateAutoBadge();
+  if(autoMode) callNextNumber();
+  else clearTimeout(autoLoopTimer);
 }
 function flashMessage(msg,color){var el=document.createElement("div");el.className="flash-msg";el.style.background=color||"#6366f1";el.textContent=msg;document.body.appendChild(el);setTimeout(function(){el.remove();},2800);}
 
@@ -414,12 +416,15 @@ function _launchGameAfterFee(totalCards) {
 
   // Update the big number display with countdown
   function updateCountdownDisplay(s) {
-    var el = document.getElementById("calledNumberDigit");
-    var am = document.getElementById("calledNumberAmharic");
+    var el    = document.getElementById("calledNumberDigit");
+    var am    = document.getElementById("calledNumberAmharic");
     var badge = document.getElementById("bnnColBadge");
     if (el)    el.textContent    = s;
     if (am)    am.textContent    = "ጨዋታ ይጀምራል...";
-    if (badge) { badge.textContent = "⏳"; badge.style.background = "#f59e0b"; }
+    if (badge) badge.textContent = "⏳";
+    // Pulse the big ball gold during countdown
+    var ball = document.querySelector(".gs-big-ball");
+    if(ball) ball.style.borderColor = "#f59e0b";
   }
 
   updateCountdownDisplay(secondsLeft);
@@ -468,19 +473,38 @@ function _launchGameAfterFee(totalCards) {
 }
 
 function buildNumberBoard(){
-  var board=document.getElementById("numberBoard");board.innerHTML="";
-  var colColors=["col-b","col-i","col-n","col-g","col-o"];
-  for(var row=0;row<15;row++){for(var col=0;col<5;col++){
-    var num=col*15+row+1;
-    var btn=document.createElement("button");
-    btn.className="nb-btn "+colColors[col];btn.id="nb-"+num;btn.textContent=num;
-    btn.onclick=(function(n){return function(){callSpecificNumber(n);};})(num);
-    board.appendChild(btn);
-  }}
+  var board = document.getElementById("numberBoard");
+  board.innerHTML = "";
+  var colClass = ["gs-nb-b","gs-nb-i","gs-nb-n","gs-nb-g","gs-nb-o"];
+  var colLabel  = ["B","I","N","G","O"];
+  // 5 cols × 15 rows: col 0=B(1-15), col 1=I(16-30), etc.
+  for(var row = 0; row < 15; row++){
+    for(var col = 0; col < 5; col++){
+      var num = col * 15 + row + 1;
+      var btn = document.createElement("button");
+      btn.className = "gs-nb-btn " + colClass[col];
+      btn.id = "nb-" + num;
+      btn.textContent = num;
+      btn.onclick = (function(n){ return function(){ callSpecificNumber(n); }; })(num);
+      board.appendChild(btn);
+    }
+  }
 }
 
 function updateNumberBoard(){
-  for(var n=1;n<=75;n++){var btn=document.getElementById("nb-"+n);if(!btn)continue;if(calledNumbers.indexOf(n)!==-1){btn.classList.add("nb-called");btn.disabled=true;}else{btn.classList.remove("nb-called");btn.disabled=false;}}
+  var colClass = ["gs-nb-b","gs-nb-i","gs-nb-n","gs-nb-g","gs-nb-o"];
+  for(var n=1;n<=75;n++){
+    var btn=document.getElementById("nb-"+n);
+    if(!btn) continue;
+    var col = Math.floor((n-1)/15);
+    if(calledNumbers.indexOf(n)!==-1){
+      btn.classList.add("gs-called");
+      btn.disabled = !currentUserIsAdmin();
+    } else {
+      btn.classList.remove("gs-called");
+      btn.disabled = !currentUserIsAdmin();
+    }
+  }
 }
 
 function buildWeights(){
@@ -568,21 +592,41 @@ function callNextNumber(){
 }
 
 function announceNumber(num){
-  var colLabel=getColumnLabel(num),colFull=getColumnFull(num),amName=getAmharicName(num);
-  var colColors={"ቢ":"#3b82f6","ኢ":"#8b5cf6","ን":"#22c55e","ጎ":"#f59e0b","!":"#ef4444"};
-  var badge=document.getElementById("bnnColBadge");
-  if(badge){badge.textContent=colLabel+" "+num;badge.style.background=colColors[colLabel]||"#6366f1";}
-  document.getElementById("calledNumberDigit").textContent=num;
-  document.getElementById("calledNumberAmharic").textContent=amName;
-  document.getElementById("calledCount").textContent=calledNumbers.length;
-  var banner=document.querySelector(".bnn-center");
-  if(banner){banner.classList.remove("bnn-pop");void banner.offsetWidth;banner.classList.add("bnn-pop");}
-  var chip=document.createElement("span");chip.className="called-chip new-chip";chip.textContent=colLabel+num;
-  document.getElementById("calledNumbersList").prepend(chip);
-  setTimeout(function(){chip.classList.remove("new-chip");},600);
-  updateNumberBoard();markAllCards(num);
+  var colIdx   = Math.floor((num-1)/15);
+  var colLabels = ["B","I","N","G","O"];
+  var colLabel  = colLabels[colIdx];
+  var colFull   = colLabel;
+  var amName    = getAmharicName(num);
+  var colBallClass = ["bc-b","bc-i","bc-n","bc-g","bc-o"][colIdx];
 
-  // ── VOICE: direct SpeechSynthesis — most reliable ─────────
+  // Update big ball
+  var badge = document.getElementById("bnnColBadge");
+  var digit = document.getElementById("calledNumberDigit");
+  var amEl  = document.getElementById("calledNumberAmharic");
+  if(badge) badge.textContent = colLabel + "-" + num;
+  if(digit) digit.textContent = num;
+  if(amEl)  amEl.textContent  = amName;
+
+  // Animate big ball
+  var ball = document.querySelector(".gs-big-ball");
+  if(ball){ ball.style.animation="none"; void ball.offsetWidth; ball.style.animation="ball-pop .3s ease"; }
+
+  // Update called count
+  document.getElementById("calledCount").textContent = calledNumbers.length;
+
+  // Add ball chip to recent row (keep last 5)
+  var row = document.getElementById("calledNumbersList");
+  if(row){
+    var chip = document.createElement("div");
+    chip.className = "gs-ball-chip " + colBallClass;
+    chip.textContent = colLabel + "-" + num;
+    row.insertBefore(chip, row.firstChild);
+    // Keep only last 5
+    while(row.children.length > 5) row.removeChild(row.lastChild);
+  }
+
+  updateNumberBoard();
+  markAllCards(num);
   SFX.number();
   speakNumberDirect(colFull, amName);
 }
@@ -676,10 +720,12 @@ function setTimerArc(f){
 }
 
 function updateAutoBadge(){
-  var badge=document.getElementById("autoBadge");if(!badge)return;
-  if(isPaused){badge.textContent="⏸ ቆሟል";badge.className="bnn-auto-badge badge-paused";}
-  else if(autoMode){badge.textContent="🔁 ራስ-ሰር";badge.className="bnn-auto-badge badge-auto";}
-  else{badge.textContent="👆 ጠቅ ያድርጉ";badge.className="bnn-auto-badge badge-manual";}
+  // Sync the toggle checkbox
+  var toggle = document.getElementById("gsAutoToggle");
+  if(toggle) toggle.checked = autoMode && gameActive && !isPaused;
+  // Update bottom bar button text
+  var btn = document.getElementById("autoBtnBoard");
+  if(btn) btn.textContent = autoMode ? "⏹ Stop Auto" : "🔁 Automatic";
 }
 
 function togglePause(){

@@ -412,141 +412,116 @@
 </div>
 
 <!-- ══════════════ GAME SCREEN ══════════════ -->
-<div id="gameScreen" class="screen">
+<div id="gameScreen" class="screen gs-layout">
 
-  <!-- ══ BIG NUMBER DISPLAY — TOP OF SCREEN ══ -->
-  <div class="big-number-banner">
-    <div class="bnn-left">
-      <span class="bnn-stat">👥 <strong id="playerCount">0</strong></span>
-      <span class="bnn-stat">📢 <strong id="calledCount">0</strong>/75</span>
+  <!-- ══ TOP STATS BAR ══ -->
+  <div class="gs-topbar">
+    <div class="gs-stat-box">
+      <div class="gs-stat-label">Game ID</div>
+      <div class="gs-stat-val" id="gsGameId">BINGO</div>
     </div>
-
-    <div class="bnn-center">
-      <div class="bnn-col-badge" id="bnnColBadge">—</div>
-      <div class="bnn-number"    id="calledNumberDigit">—</div>
-      <div class="bnn-amharic"   id="calledNumberAmharic">ቁጥር ይጠበቃል</div>
+    <div class="gs-stat-box">
+      <div class="gs-stat-label">Players</div>
+      <div class="gs-stat-val" id="playerCount">0</div>
     </div>
-
-    <div class="bnn-right">
-      <div class="bnn-auto-badge" id="autoBadge">⏸ ቆሟል</div>
+    <div class="gs-stat-box">
+      <div class="gs-stat-label">Bet</div>
+      <div class="gs-stat-val">10</div>
     </div>
-  </div>
-
-  <!-- Prize pool + game stats bar -->
-  <div class="prize-banner">
-    <div>
-      <div class="prize-pool-label">🏆 ሽልማት ፈንድ</div>
-      <div class="prize-pool-amount" id="livePrizePool">0 ብር</div>
+    <div class="gs-stat-box">
+      <div class="gs-stat-label">Derash</div>
+      <div class="gs-stat-val" id="livePrizePool">0</div>
     </div>
-    <div style="text-align:center">
-      <div class="prize-pool-label">🎮 ካርዶች</div>
-      <div class="prize-pool-amount" id="liveCardCount">0</div>
-    </div>
-    <div style="text-align:right">
-      <div class="prize-pool-label">👤 ተጫዋቾች</div>
-      <div class="prize-pool-amount" id="livePlayerCount">0</div>
+    <div class="gs-stat-box">
+      <div class="gs-stat-label">Called</div>
+      <div class="gs-stat-val" id="calledCount">0</div>
     </div>
   </div>
 
-  <!-- Called numbers scroll bar -->
-  <div class="called-numbers-bar">
-    <span class="bar-label">ተጠርተዋል:</span>
-    <div id="calledNumbersList" class="called-list"></div>
-  </div>
+  <!-- ══ MAIN BODY: left board + right panel ══ -->
+  <div class="gs-body">
 
-  <!-- ══ VOICE STATUS BAR ══ -->
-  <div class="voice-status-bar" id="voiceStatusBar">
-    <span class="vsb-dot" id="voiceDot">⚪</span>
-    <span class="vsb-label" id="voiceStatusLabel">ድምፅ እየፈተሸ ነው...</span>
-    <button class="vsb-test-btn" onclick="runVoiceCheck()">🔊 ሙከራ</button>
-  </div>
-
-  <!-- Game controls -->
-  <div class="game-controls">
-    <button class="btn-call"  id="callBtn"  onclick="callNextNumber()">▶ ቁጥር ጥራ</button>
-    <button class="btn-auto"  id="autoBtn"  onclick="toggleAutoCall()">⏹ ራስ-ሰር አቁም</button>
-    <button class="btn-pause" id="pauseBtn" onclick="togglePause()">⏸ አቁም</button>
-    <button class="btn-bingo"               onclick="declareBingo()">🏆 ቢንጎ!</button>
-    <button class="btn-mute-game" id="muteBtnGame" onclick="toggleMuteBtn()">🔊</button>
-    <button class="btn-voice-test"          onclick="testVoiceNow()" title="ድምፅ ሙከራ">🎙</button>
-    <!-- Cancel during countdown only -->
-    <button class="btn-cancel-countdown" id="cancelCountdownBtn"
-            onclick="cancelCountdown()" style="display:none">❌ ሰርዝ</button>
-    <!-- Stop button — disabled once game starts -->
-    <button class="btn-danger" id="stopGameBtn" onclick="confirmEndGame()" style="display:none">⏹</button>
-  </div>
-
-  <!-- ══ INVITE LINK BAR ══ -->
-  <div class="invite-bar">
-    <span class="invite-label">🔗 ጓደኛ ጋብዝ:</span>
-    <input type="text" id="inviteLinkInput" class="invite-input" readonly
-           onclick="this.select()" placeholder="ሊንክ ይፈጠራል..."/>
-    <button class="btn-copy-link" onclick="copyInviteLink()">📋 ቅዳ</button>
-    <button class="btn-share-link" onclick="shareInviteLink()">📤 አጋራ</button>
-  </div>
-
-  <!-- ══ LIVE CHAT / COMMENT SECTION ══ -->
-  <div class="chat-section">
-    <div class="chat-header">
-      <span class="chat-title">💬 ቀጥታ ውይይት</span>
-      <span class="chat-online" id="chatOnlineCount">👥 1 ተጫዋች</span>
+    <!-- LEFT: Number board 5×15 -->
+    <div class="gs-left">
+      <!-- Column headers -->
+      <div class="gs-col-headers">
+        <div class="gs-col-hdr col-b">B</div>
+        <div class="gs-col-hdr col-i">I</div>
+        <div class="gs-col-hdr col-n">N</div>
+        <div class="gs-col-hdr col-g">G</div>
+        <div class="gs-col-hdr col-o">O</div>
+      </div>
+      <!-- Number grid 1-75 (rows 1-15, cols B/I/N/G/O) -->
+      <div id="numberBoard" class="gs-number-board"></div>
     </div>
-    <div id="chatMessages" class="chat-messages"></div>
-    <div class="chat-input-row">
-      <button class="btn-chat-mic" id="chatMicBtn" onclick="toggleChatMic()" title="🎤 በድምፅ ይናገሩ">🎤</button>
-      <input type="text" id="chatInput" class="chat-input"
-             placeholder="መልዕክት ይጻፉ..."
-             maxlength="120"
-             onkeydown="if(event.key==='Enter')sendChatMsg()"/>
-      <button class="btn-chat-send" onclick="sendChatMsg()">➤</button>
-    </div>
-    <!-- Quick reaction buttons -->
-    <div class="chat-reactions">
-      <button onclick="sendReaction('🎉')">🎉</button>
-      <button onclick="sendReaction('🏆')">🏆</button>
-      <button onclick="sendReaction('😮')">😮</button>
-      <button onclick="sendReaction('🔥')">🔥</button>
-      <button onclick="sendReaction('👏')">👏</button>
-      <button onclick="sendReaction('😂')">😂</button>
-      <button onclick="sendReaction('❤️')">❤️</button>
-      <button onclick="sendReaction('😢')">😢</button>
+
+    <!-- RIGHT: Ball display + controls -->
+    <div class="gs-right">
+
+      <!-- Recent called balls row -->
+      <div class="gs-balls-row" id="calledNumbersList"></div>
+
+      <!-- Big current ball -->
+      <div class="gs-big-ball-wrap">
+        <div class="gs-big-ball" id="gsBigBall">
+          <div class="gs-big-ball-col" id="bnnColBadge">—</div>
+          <div class="gs-big-ball-num" id="calledNumberDigit">—</div>
+        </div>
+      </div>
+
+      <!-- Admin controls -->
+      <div class="gs-admin-controls" id="gsAdminControls" style="display:none">
+        <label class="gs-auto-toggle">
+          <span>Automatic</span>
+          <div class="gs-toggle-wrap">
+            <input type="checkbox" id="gsAutoToggle" onchange="onAutoToggleChange(this.checked)"/>
+            <span class="gs-toggle-slider"></span>
+          </div>
+        </label>
+        <div class="gs-admin-btns">
+          <button class="gs-btn-call" id="callBtn" onclick="callNextNumber()">▶ Call</button>
+          <button class="gs-btn-pause" id="pauseBtn" onclick="togglePause()">⏸ Pause</button>
+          <button class="gs-btn-stop" id="stopGameBtn" onclick="confirmEndGame()" style="display:none">⏹ Stop</button>
+          <button class="gs-btn-cancel" id="cancelCountdownBtn" onclick="cancelCountdown()" style="display:none">❌ Cancel</button>
+        </div>
+      </div>
+
+      <!-- Non-admin watching message -->
+      <div class="gs-watching" id="gsWatching" style="display:none">
+        <div class="gs-watching-title">Watching Only</div>
+        <div class="gs-watching-msg" id="calledNumberAmharic">ቁጥር ይጠበቃል</div>
+      </div>
+
+      <!-- Bingo button — everyone can declare -->
+      <button class="gs-btn-bingo" onclick="declareBingo()">🏆 ቢንጎ!</button>
+
     </div>
   </div>
 
-  <!-- NUMBER BOARD 1–75 (like real bingo caller) -->
-  <div class="number-board-section">
-    <div class="nb-header">
-      <span class="nb-title">🎲 ቁጥሮች (1–75) — ጠቅ ያድርጉ ለመጥራት</span>
-      <button class="btn-sm-gray" onclick="toggleAutoCall()" id="autoBtnBoard">🔁 ራስ-ሰር</button>
-    </div>
-
-    <!-- Probability mode selector -->
-    <div class="prob-bar">
-      <span class="prob-label">📊 ዕጣ ሁነታ:</span>
-      <button id="prob-pure"     class="prob-btn" onclick="setProbMode('pure')">🎲 ተራ</button>
-      <button id="prob-balanced" class="prob-btn prob-active" onclick="setProbMode('balanced')">⚖️ ሚዛናዊ</button>
-      <button id="prob-hot"      class="prob-btn" onclick="setProbMode('hot')">🔥 ፈጣን</button>
-      <button id="prob-cold"     class="prob-btn" onclick="setProbMode('cold')">❄️ ዘገምተኛ</button>
-      <span class="prob-legend">
-        <span class="dot hot3"></span>ከፍተኛ
-        <span class="dot cold2"></span>ዝቅተኛ
-      </span>
-    </div>
-    <div class="nb-cols">
-      <div class="nb-col-label">B<br><small>1–15</small></div>
-      <div class="nb-col-label">I<br><small>16–30</small></div>
-      <div class="nb-col-label">N<br><small>31–45</small></div>
-      <div class="nb-col-label">G<br><small>46–60</small></div>
-      <div class="nb-col-label">O<br><small>61–75</small></div>
-    </div>
-    <div id="numberBoard" class="number-board"></div>
+  <!-- ══ BOTTOM ACTION BAR ══ -->
+  <div class="gs-bottom-bar">
+    <button class="gs-btn-leave" onclick="showScreen('mainMenu')">Leave</button>
+    <button class="gs-btn-refresh" onclick="refreshUserBar()">↺ Refresh</button>
+    <button class="gs-btn-auto-bottom" id="autoBtnBoard" onclick="toggleAutoCall()">🔁 Automatic</button>
+    <button class="gs-btn-mute" id="muteBtnGame" onclick="toggleMuteBtn()">🔊</button>
   </div>
 
-  <!-- Player cards -->
-  <div class="cards-section">
-    <h3>ካርዶች (<span id="cardsLabel">0</span>)</h3>
+  <!-- hidden compat elements -->
+  <span id="autoBtn" style="display:none"></span>
+  <span id="autoBadge" style="display:none"></span>
+  <span id="liveCardCount" style="display:none"></span>
+  <span id="livePlayerCount" style="display:none"></span>
+  <span id="voiceStatusBar" style="display:none">
+    <span id="voiceDot"></span>
+    <span id="voiceStatusLabel"></span>
+  </span>
+
+  <!-- Player cards (scrollable below) -->
+  <div class="gs-cards-section">
+    <div class="gs-cards-label">ካርዶች (<span id="cardsLabel">0</span>)</div>
     <div id="cardsGrid" class="cards-grid"></div>
   </div>
+
 </div>
 
 <!-- ══════════════ WIN SCREEN ══════════════ -->
