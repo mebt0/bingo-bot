@@ -1453,14 +1453,25 @@ function copyCid(phone) {
   }
 }
 
-// ── Admin phone numbers ───────────────────────────────────────
+// ── Admin phone numbers & Telegram IDs ───────────────────────
 var ADMIN_PHONES = ["0924787903", "+251924787903"];
+// Admin Telegram user IDs (from BOT_USERNAME context)
+var ADMIN_TG_IDS = ["7627811244", "1119881250"];
 
 function isAdminPhone(phone) {
   var p = String(phone).replace(/\s/g, "");
-  return ADMIN_PHONES.indexOf(p) !== -1 ||
-         ADMIN_PHONES.indexOf(p.replace(/^0/, "+251")) !== -1 ||
-         ADMIN_PHONES.indexOf(p.replace(/^\+251/, "0")) !== -1;
+  // Check phone numbers
+  if (ADMIN_PHONES.indexOf(p) !== -1 ||
+      ADMIN_PHONES.indexOf(p.replace(/^0/, "+251")) !== -1 ||
+      ADMIN_PHONES.indexOf(p.replace(/^\+251/, "0")) !== -1) {
+    return true;
+  }
+  // Check Telegram IDs (phone stored as "tg_<id>")
+  if (p.startsWith("tg_")) {
+    var tgId = p.replace("tg_", "");
+    if (ADMIN_TG_IDS.indexOf(tgId) !== -1) return true;
+  }
+  return false;
 }
 
 // ── Auto-login — no login screen needed ──────────────────────
