@@ -2502,3 +2502,112 @@ button:disabled { opacity:.4; cursor:not-allowed; transform:none; }
   color: #94a3b8;
   margin-bottom: 6px;
 }
+
+/* ══════════════════════════════════════════════════════════
+   CARD SELECT — Beteseb-style number grid
+   ══════════════════════════════════════════════════════════ */
+
+#cardSelectScreen.cs-screen {
+  display: flex;
+  flex-direction: column;
+  height: var(--tg-viewport-stable-height, 100vh);
+  padding: 0;
+  overflow: hidden;
+  background: #1a1a2e;
+}
+
+/* Top bar */
+#cardSelectScreen .cs-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #16213e;
+  border-bottom: 1px solid #0f3460;
+  flex-shrink: 0;
+}
+.cs-refresh-btn {
+  background: #334155;
+  color: #f1f5f9;
+  border: none;
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: .85rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* Stats bar */
+.cs-stats-bar {
+  display: flex;
+  gap: 4px;
+  padding: 6px 8px;
+  background: #16213e;
+  border-bottom: 1px solid #0f3460;
+  flex-shrink: 0;
+}
+.cs-stat {
+  flex: 1;
+  background: #0f3460;
+  border-radius: 6px;
+  padding: 5px 6px;
+}
+.cs-stat-lbl {
+  font-size: .58rem;
+  color: #94a3b8;
+  font-weight: 600;
+}
+.cs-stat-val {
+  font-size: .9rem;
+  font-weight: 900;
+  color: #f1f5f9;
+}
+.cs-stat-timer { background: #1e293b; }
+.cs-timer-val  { color: #f59e0b; font-size: 1rem; }
+
+/* Number grid */
+.cs-num-grid {
+  flex: 1 1 0;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 4px;
+  padding: 8px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  align-content: start;
+}
+
+.cs-num-btn {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .78rem;
+  font-weight: 800;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  background: #2d3561;
+  color: #94a3b8;
+  transition: background .12s, transform .1s;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+.cs-num-btn:active { transform: scale(.9); }
+
+/* Selected — orange like the image */
+.cs-num-btn.cs-num-selected {
+  background: #e74c3c;
+  color: white;
+  box-shadow: 0 2px 8px rgba(231,76,60,.4);
+}
+
+/* Bottom bar */
+#cardSelectScreen .cs-bottom {
+  flex-shrink: 0;
+  padding: 8px;
+  background: #16213e;
+  border-top: 1px solid #0f3460;
+}

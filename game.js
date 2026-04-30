@@ -168,12 +168,12 @@ function updateCsStatus(){
   var chosen=playerCards[currentPlayer]||[];
   var totalSelected=0;
   for(var i=0;i<playerCount;i++) totalSelected+=(playerCards[i]||[]).length;
-  document.getElementById("csStatus").textContent=
-    chosen.length>0
-      ? chosen.length+" ካርድ ተመርጧል ✅"
-      : "ካርድ ምረጥ — ጠቅ ያድርጉ";
+  var statusEl = document.getElementById("csStatus");
+  if(statusEl) statusEl.textContent = totalSelected > 0 ? totalSelected + " ✓" : "—";
   var prog=document.getElementById("csProgress");if(!prog)return;
-  prog.innerHTML='<span class="prog-count">✅ '+totalSelected+' ካርድ ተመርጧል | 💰 '+fmtMoney(totalSelected*ENTRY_FEE)+'</span>';
+  prog.innerHTML = totalSelected > 0
+    ? '<span class="prog-count">✅ '+totalSelected+' ካርድ | 💰 '+fmtMoney(totalSelected*ENTRY_FEE)+'</span>'
+    : '';
 }
 
 function renderCardPool(){
@@ -182,59 +182,29 @@ function renderCardPool(){
   pool.innerHTML = "";
 
   if(!poolCards || poolCards.length === 0){
-    pool.innerHTML = '<div style="color:#94a3b8;padding:20px;text-align:center;grid-column:1/-1">ካርዶች እየጫነ ነው...</div>';
+    pool.innerHTML = '<div style="color:#94a3b8;padding:20px;text-align:center">ካርዶች እየጫነ ነው...</div>';
     return;
   }
 
   var chosen    = playerCards[currentPlayer] || [];
   var chosenIds = chosen.map(function(c){ return c.id; });
 
+  // Render as flat number buttons (like the image)
   for(var idx = 0; idx < poolCards.length; idx++){
     var card     = poolCards[idx];
     var isChosen = chosenIds.indexOf(card.id) !== -1;
 
-    var wrap = document.createElement("div");
-    wrap.className = "pool-card" + (isChosen ? " pool-selected" : "");
-    wrap.setAttribute("data-card-id", card.id);
-
-    // Badge
-    var badge = document.createElement("div");
-    badge.className = "pool-badge";
-    badge.textContent = isChosen ? "✅ " + card.id : "#" + card.id;
-    wrap.appendChild(badge);
-
-    // Column header
-    var hdr = document.createElement("div");
-    hdr.className = "mini-card-header";
-    for(var ci = 0; ci < BINGO_COLS_AM.length; ci++){
-      var sp = document.createElement("span");
-      sp.textContent = BINGO_COLS_AM[ci];
-      hdr.appendChild(sp);
-    }
-    wrap.appendChild(hdr);
-
-    // Grid cells
-    var gridEl = document.createElement("div");
-    gridEl.className = "mini-card-grid";
-    for(var row = 0; row < 5; row++){
-      for(var col = 0; col < 5; col++){
-        var cell = document.createElement("div");
-        var v    = card.grid[col][row];
-        cell.className = "mini-cell" + (v === "FREE" ? " mini-free" : "");
-        cell.textContent = v === "FREE" ? "★" : v;
-        gridEl.appendChild(cell);
-      }
-    }
-    wrap.appendChild(gridEl);
-
-    // Use data attribute + event delegation instead of closure
-    pool.appendChild(wrap);
+    var btn = document.createElement("button");
+    btn.className = "cs-num-btn" + (isChosen ? " cs-num-selected" : "");
+    btn.setAttribute("data-card-id", card.id);
+    btn.textContent = card.id;
+    pool.appendChild(btn);
   }
 
-  // Single event listener on the pool (event delegation — no closure issues)
+  // Event delegation
   pool.onclick = function(e){
-    var card = e.target.closest("[data-card-id]");
-    if(card) selectCard(parseInt(card.getAttribute("data-card-id")));
+    var btn = e.target.closest("[data-card-id]");
+    if(btn) selectCard(parseInt(btn.getAttribute("data-card-id")));
   };
 }
 

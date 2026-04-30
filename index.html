@@ -361,50 +361,41 @@
 </div>
 
 <!-- ══════════════ CARD SELECT ══════════════ -->
-<div id="cardSelectScreen" class="screen">
+<div id="cardSelectScreen" class="screen cs-screen">
 
   <!-- Top bar -->
   <div class="cs-topbar">
-    <button class="btn-back" onclick="showScreen('mainMenu')">◀</button>
-    <h2>ካርድ ምረጡ</h2>
-    <div style="display:flex;gap:6px;align-items:center">
-      <div id="csStatus" class="cs-status">ካርድ ምረጥ — ጠቅ ያድርጉ</div>
-      <button class="btn-logout" onclick="doLogout()" title="ውጣ" style="padding:6px 9px;font-size:.85rem">⏏</button>
+    <button class="btn-back" onclick="showScreen('mainMenu')">◀ Back</button>
+    <button class="cs-refresh-btn" onclick="goToCardSelect()">↺ Refresh</button>
+  </div>
+
+  <!-- Stats bar -->
+  <div class="cs-stats-bar">
+    <div class="cs-stat">
+      <div class="cs-stat-lbl">Main Wallet</div>
+      <div class="cs-stat-val" id="csBalanceAmt">0</div>
+    </div>
+    <div class="cs-stat">
+      <div class="cs-stat-lbl">Play Wallet</div>
+      <div class="cs-stat-val" id="csPlayWallet">0</div>
+    </div>
+    <div class="cs-stat">
+      <div class="cs-stat-lbl">Stake</div>
+      <div class="cs-stat-val">10</div>
+    </div>
+    <div class="cs-stat cs-stat-timer">
+      <div class="cs-stat-val cs-timer-val" id="csStatus">—</div>
     </div>
   </div>
 
-  <!-- Balance bar -->
-  <div class="cs-balance-bar">
-    <span>💰 ቀሪ ሂሳብ: <strong id="csBalanceAmt">—</strong></span>
-    <span class="cs-fee-note">| ካርድ: <strong>10 ብር</strong></span>
-    <button class="btn-sm-blue" onclick="openMyAccount()" style="padding:4px 10px;font-size:.75rem;margin-left:auto">💵 ሙላ</button>
-  </div>
+  <!-- Number grid (1-400) -->
+  <div id="cardPool" class="cs-num-grid"></div>
 
-  <!-- Selected preview -->
-  <div id="selectedCardPreview" class="selected-preview hidden">
-    <div class="preview-label">✅ የተመረጡ ካርዶች:</div>
-    <div id="previewCardEl"></div>
-  </div>
-
-  <!-- Pool header -->
-  <div class="pool-header">
-    <span id="poolTitle">ካርዶች — ምረጡ:</span>
-    <span class="pool-hint">👆 ጠቅ ያድርጉ</span>
-  </div>
-
-  <!-- Card pool — scrollable -->
-  <div id="cardPool" class="card-pool"></div>
-
-  <!-- Sticky bottom bar -->
+  <!-- Bottom bar -->
   <div class="cs-bottom">
-    <div class="prize-preview" id="prizePreview">
-      <span class="pp-label">🏆 ሽልማት:</span>
-      <span class="pp-amount" id="prizePreviewAmt">—</span>
-      <span class="pp-fee">| ክፍያ: <strong id="feePreviewAmt">—</strong></span>
-    </div>
     <div id="csProgress" class="cs-progress"></div>
     <button class="btn-primary" id="startGameBtn" onclick="launchGame()" disabled
-            style="max-width:100%;width:100%">
+            style="max-width:100%;width:100%;display:none">
       ▶ ጨዋታ ጀምር
     </button>
   </div>
