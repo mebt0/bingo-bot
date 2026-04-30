@@ -1671,7 +1671,6 @@ function doRegisterAuth() {
 
   if (!phone || phone.length < 10) { showAuthError("registerError", "ትክክለኛ ስልክ ቁጥር ያስገቡ"); return; }
   if (pass.length < 4)             { showAuthError("registerError", "የይለፍ ቃል ቢያንስ 4 ቁጥር"); return; }
-  if (pass !== pass2)              { showAuthError("registerError", "የይለፍ ቃሎቹ አይዛመዱም"); return; }
 
   var btn = document.getElementById("regSubmitBtn");
   if (btn) { btn.disabled = true; btn.textContent = "⏳ እየተሰራ..."; }
@@ -1679,6 +1678,21 @@ function doRegisterAuth() {
   apiCall("POST", "/auth/register", { phone: phone, password: pass, full_name: phone }, function(err, data) {
     if (btn) { btn.disabled = false; btn.textContent = "✨ ምዝገባ"; }
     if (err || !data || !data.ok) {
+      // If already registered — auto-login with same credentials
+      if (data && (data.msg || "").indexOf("ቀድሞ") !== -1) {
+        apiCall("POST", "/auth/login", { phone: phone, password: pass }, function(err2, data2) {
+          if (data2 && data2.ok) {
+            setToken(data2.token);
+            loginSuccess(data2.user);
+          } else {
+            showAuthError("registerError", "ቀድሞ ተመዝግቧል — ትክክለኛ የይለፍ ቃል ያስገቡ");
+            authTab("login");
+            var lp = document.getElementById("loginPhone");
+            if (lp) lp.value = phone;
+          }
+        });
+        return;
+      }
       showAuthError("registerError", data ? data.msg : "ኔትወርክ ስህተት");
       return;
     }
