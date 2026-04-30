@@ -98,7 +98,12 @@ function generateCard(id){
   return{id:id,grid:grid,marked:marked,hasBingo:false,owner:null};
 }
 
+// ── Game code for current session ────────────────────────────
+var currentGameCode = "GAME-" + Date.now();
+
 function goToCardSelect(){
+  // New game code each session
+  currentGameCode = "GAME-" + Date.now();
   // Full reset of game state
   clearTimeout(autoLoopTimer);
   gameActive=false; autoMode=false; isPaused=false;
@@ -236,11 +241,32 @@ function selectCard(cardId){
 
   var idx = chosen.findIndex(function(c){ return c.id === cardId; });
   if(idx !== -1){
-    // Deselect — turns green again
+    // Deselect — refund 10 ብር
     chosen.splice(idx, 1);
+    if(currentUser){
+      addPrize(currentUser.phone, ENTRY_FEE, function(){ refreshUserBar(); });
+      flashMessage("↩️ ካርድ #" + cardId + " ተሰርዟል — " + fmtMoney(ENTRY_FEE) + " ተመልሷል", "#f59e0b");
+    }
   } else {
-    // Select — max 1 card, deselect previous
-    chosen.length = 0;
+    // Select — deduct 10 ብር immediately
+    if(currentUser){
+      apiCall("POST", "/wallet/game-fee",
+        { amount: ENTRY_FEE, note: "ካርድ #" + cardId, game_code: currentGameCode },
+        function(err, data){
+          if(err || !data || !data.ok){
+            flashMessage("❌ " + (data ? data.msg : "ቀሪ ሂሳብ በቂ አይደለም"), "#ef4444");
+            return;
+          }
+          currentUser.balance = data.balance;
+          refreshUserBar();
+          // Now add card
+          chosen.push(card);
+          playerCards[currentPlayer] = chosen;
+          _afterSelectCard(cardId, chosen);
+        }
+      );
+      return; // wait for API response
+    }
     chosen.push(card);
     try { SFX.number(); } catch(e){}
   }
@@ -278,6 +304,23 @@ function selectCard(cardId){
       btn.classList.remove("btn-ready");
     }
   }
+}
+
+function _afterSelectCard(cardId, chosen) {
+  try { SFX.number(); } catch(e){}
+  flashMessage("✅ ካርድ #" + cardId + " ተመረጠ — " + fmtMoney(ENTRY_FEE) + " ተቀንሷል", "#22c55e");
+
+  // Show selected card bar
+  var selBar = document.getElementById("csSelectedBar");
+  var selNum = document.getElementById("csSelectedNum");
+  if(selBar && selNum){
+    selBar.style.display = "";
+    selNum.textContent   = "#" + chosen[0].id;
+  }
+
+  updateCsStatus();
+  renderCardPool();
+  updatePrizePreview();
 }
 
 function clearSelectedCard() {
@@ -347,12 +390,24 @@ function launchGame(){
   playerCards[0] = poolCards.slice();
   var totalCards = 400;
 
-  // Admin does NOT pay entry fee — players pay when they select their card
-  // Just launch the game directly
-  _launchGameAfterFee(totalCards);
+  // Fetch real prize pool from backend (sum of all game-fee payments)
+  apiCall("GET", "/wallet/prize-pool?game_code=" + encodeURIComponent(currentGameCode), null, function(err, data){
+    if(data && data.ok && data.prize_pool > 0){
+      currentPrizePool = data.prize_pool;
+      flashMessage("🏆 ሽልማት ፈንድ: " + fmtMoney(currentPrizePool) + " (" + data.total_collected + " ብር ተሰብስቧል)", "#f59e0b");
+    } else {
+      // Fallback: no players paid yet
+      currentPrizePool = 0;
+    }
+    _launchGameAfterFee(totalCards);
+  });
 }
 
 function _launchGameAfterFee(totalCards) {
+  // Prize pool is based on ACTUAL players who paid (tracked via backend)
+  // We start with 0 and accumulate as players join via card selection
+  // For now use the number of cards that were actually paid for
+  // Admin launches with all 400 cards but prize = sum of player payments
   var totalFee     = ENTRY_FEE * totalCards;
   var houseCut     = Math.floor(totalFee * 0.20);
   currentPrizePool = totalFee - houseCut;

@@ -148,13 +148,14 @@ router.post('/game-fee', requireAuth, async (req, res) => {
   const conn = await db.getConnection();
   try {
     await conn.beginTransaction();
-    const amt  = parseFloat(req.body.amount);
-    const note = req.body.note || 'ካርድ ክፍያ';
+    const amt      = parseFloat(req.body.amount);
+    const note     = req.body.note || 'ካርድ ክፍያ';
+    const gameCode = req.body.game_code || 'LOCAL-GAME';
     if (isNaN(amt) || amt <= 0) {
       await conn.rollback(); conn.release();
       return res.status(400).json({ ok: false, msg: 'ትክክለኛ መጠን ያስፈልጋል' });
     }
-    const { after } = await recordTx(conn, req.user.id, 'entry_fee', amt, note, 'LOCAL-GAME');
+    const { after } = await recordTx(conn, req.user.id, 'entry_fee', amt, note, gameCode);
     await conn.query(
       'UPDATE users SET games_played = games_played + 1, updated_at = NOW() WHERE id = ?',
       [req.user.id]
@@ -164,6 +165,30 @@ router.post('/game-fee', requireAuth, async (req, res) => {
   } catch (err) {
     await conn.rollback(); conn.release();
     res.status(400).json({ ok: false, msg: err.message || 'Server error' });
+  }
+});
+
+// ── GET /api/wallet/prize-pool  (get current prize pool from paid fees) ──
+router.get('/prize-pool', requireAuth, async (req, res) => {
+  try {
+    const gameCode = req.query.game_code || 'LOCAL-GAME';
+    const houseCutPct = parseFloat(process.env.HOUSE_CUT_PERCENT || 20) / 100;
+
+    // Sum all entry fees for this game code
+    const [[{ total }]] = await db.query(
+      `SELECT COALESCE(SUM(amount), 0) AS total
+       FROM transactions
+       WHERE type = 'entry_fee' AND reference = ?`,
+      [gameCode]
+    );
+
+    const houseCut = Math.floor(total * houseCutPct);
+    const prize    = total - houseCut;
+
+    res.json({ ok: true, total_collected: total, house_cut: houseCut, prize_pool: prize });
+  } catch (err) {
+    console.error('Prize pool error:', err);
+    res.status(500).json({ ok: false, msg: err.message || 'Server error' });
   }
 });
 
