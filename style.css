@@ -2589,19 +2589,19 @@ button:disabled { opacity:.4; cursor:not-allowed; transform:none; }
   border-radius: 6px;
   border: none;
   cursor: pointer;
-  background: #2d3561;
-  color: #94a3b8;
+  background: #22c55e;
+  color: white;
   transition: background .12s, transform .1s;
   font-family: inherit;
   -webkit-tap-highlight-color: transparent;
 }
 .cs-num-btn:active { transform: scale(.9); }
 
-/* Selected — green */
+/* Selected — red (card taken) */
 .cs-num-btn.cs-num-selected {
-  background: #22c55e;
+  background: #ef4444;
   color: white;
-  box-shadow: 0 2px 8px rgba(34,197,94,.4);
+  box-shadow: 0 2px 8px rgba(239,68,68,.4);
 }
 
 /* Bottom bar */
