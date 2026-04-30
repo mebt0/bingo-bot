@@ -148,7 +148,7 @@ function goToCardSelect(){
           if (data && data.ok) {
             currentUser.balance = data.balance;
             csBalEl.textContent = parseFloat(data.balance).toFixed(0);
-            // Show warning if balance < 10
+            // Show warning only if balance < 10
             if (data.balance < ENTRY_FEE) {
               csBalEl.style.color = "#ef4444";
               var prog = document.getElementById("csProgress");
@@ -228,18 +228,6 @@ function renderCardPool(){
 }
 
 function selectCard(cardId){
-  // Check balance before allowing selection
-  if(currentUser && (currentUser.balance || 0) < ENTRY_FEE){
-    flashMessage("❌ ቀሪ ሂሳብ " + fmtMoney(currentUser.balance || 0) + " — ቢያንስ " + fmtMoney(ENTRY_FEE) + " ያስፈልጋል", "#ef4444");
-    // Show deposit prompt
-    setTimeout(function(){
-      if(confirm("💰 ሂሳብ ለመሙላት ወደ አካውንት ይሂዱ?")){
-        openMyAccount();
-      }
-    }, 300);
-    return;
-  }
-
   var card = poolCards.find(function(c){ return c.id === cardId; });
   if(!card) return;
 
