@@ -103,24 +103,40 @@ input{width:100%;padding:11px 14px;background:#0f172a;border:1px solid #334155;b
 <div id="panel-game" class="panel">
   <div class="card">
     <h3 style="margin-bottom:14px;color:#f59e0b">🎮 Game Control</h3>
-    <p style="color:#94a3b8;font-size:.85rem;margin-bottom:14px">
-      Open the main game in a new tab to start/control games. Admin controls will be visible.
-    </p>
-    <a href="index.html" target="_blank" class="btn btn-gold" style="display:block;text-align:center;text-decoration:none;margin-bottom:8px">
-      🎮 Open Game (New Tab)
+
+    <!-- Game status -->
+    <div id="gameStatusBar" style="background:#0f172a;border-radius:8px;padding:12px;margin-bottom:14px;text-align:center">
+      <div style="font-size:.82rem;color:#94a3b8;margin-bottom:4px">Game Status</div>
+      <div id="gameStatusVal" style="font-size:1.1rem;font-weight:900;color:#f59e0b">⏳ Loading...</div>
+    </div>
+
+    <!-- Open game as admin -->
+    <button class="btn btn-gold" style="margin-bottom:8px" onclick="openGameAsAdmin()">
+      🎮 Open Game & Start
+    </button>
+    <a href="index.html" target="_blank" class="btn btn-blue" style="display:block;text-align:center;text-decoration:none;margin-bottom:8px">
+      🔗 Open Game (New Tab)
     </a>
-    <a href="https://mebt0.github.io/bingo-bot/?invite=1" target="_blank" class="btn btn-blue" style="display:block;text-align:center;text-decoration:none">
-      🔗 Open Game (GitHub Pages)
-    </a>
+
+    <!-- Invite link -->
+    <div style="margin-top:14px">
+      <div style="font-size:.82rem;color:#94a3b8;margin-bottom:6px">🔗 Invite Link</div>
+      <div style="display:flex;gap:6px">
+        <input type="text" id="inviteLinkInput" value="https://mebt0.github.io/bingo-bot/?invite=1"
+               style="flex:1;margin:0;font-size:.78rem" readonly onclick="this.select()"/>
+        <button class="btn btn-gray" style="width:auto;padding:10px 14px;font-size:.82rem" onclick="copyInviteLink()">📋 Copy</button>
+      </div>
+    </div>
   </div>
+
   <div class="card">
     <h3 style="margin-bottom:10px;color:#f59e0b">📋 How It Works</h3>
-    <ul style="color:#94a3b8;font-size:.85rem;line-height:1.8;padding-left:20px">
-      <li>Users select 1 card from 400 cards (green = available, red = selected)</li>
-      <li>Admin clicks "▶ ጨዋታ ጀምር" to start game with all 400 cards</li>
-      <li>Admin controls: Call numbers, Auto mode, Pause, Stop</li>
-      <li>Users watch and declare "🏆 ቢንጎ!" when they win</li>
-      <li>Winner gets prize automatically credited to balance</li>
+    <ul style="color:#94a3b8;font-size:.85rem;line-height:1.9;padding-left:20px">
+      <li>Click <strong style="color:#f59e0b">🎮 Open Game & Start</strong> to open game as admin</li>
+      <li>Users select 1 card from 400 (green = available)</li>
+      <li>Admin clicks <strong>▶ ጨዋታ ጀምር</strong> — 30s countdown starts</li>
+      <li>Numbers called automatically every 1 second</li>
+      <li>Winner declares <strong>🏆 ቢንጎ!</strong> — prize auto-credited</li>
     </ul>
   </div>
 </div>
@@ -268,6 +284,7 @@ function switchTab(name){
   if(name==="pending")  loadPending();
   if(name==="txns")     loadTxns();
   if(name==="users")    loadUsers();
+  if(name==="game")     loadGameStatus();
 }
 
 function fmt(n){ return parseFloat(n||0).toFixed(2)+" Birr"; }
@@ -524,7 +541,47 @@ function unbanModal(userId){
   });
 }
 
-// ── Credit ─────────────────────────────────────────────────────
+// ── Game Control ───────────────────────────────────────────────
+function openGameAsAdmin(){
+  // Store admin panel token so index.html can use it
+  localStorage.setItem("adminPanelToken", PANEL_TOKEN);
+  // Open game in same tab (admin will be recognized)
+  window.location.href = "index.html";
+}
+
+function copyInviteLink(){
+  var inp = document.getElementById("inviteLinkInput");
+  if(!inp) return;
+  inp.select();
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(inp.value).then(function(){ showGameMsg("✅ Link copied!"); });
+  } else {
+    document.execCommand("copy");
+    showGameMsg("✅ Link copied!");
+  }
+}
+
+function showGameMsg(msg){
+  var el = document.createElement("div");
+  el.style.cssText = "position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#22c55e;color:white;padding:10px 20px;border-radius:8px;font-weight:700;z-index:9999";
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(function(){ el.remove(); }, 2500);
+}
+
+function loadGameStatus(){
+  api("GET","/admin/stats",null,function(err,data){
+    var el = document.getElementById("gameStatusVal");
+    if(!el) return;
+    if(data && data.ok){
+      var s = data.stats;
+      el.textContent = s.active_games > 0
+        ? "🟢 " + s.active_games + " Active Game(s)"
+        : "⚫ No Active Games";
+      el.style.color = s.active_games > 0 ? "#22c55e" : "#94a3b8";
+    }
+  });
+}
 function doCredit(){
   var phone=(document.getElementById("creditPhone").value||"").trim();
   var amount=parseFloat(document.getElementById("creditAmount").value);
