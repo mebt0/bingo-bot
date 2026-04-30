@@ -131,6 +131,59 @@ bot.command("join", async (ctx) => {
   if (alreadyJoined) {
     return ctx.reply(`⚠️ ${user.first_name}፣ ቀድሞ ተቀላቅለዋል!`);
   }
+
+  // Check balance via backend API
+  const BACKEND = process.env.BACKEND_URL || "http://localhost:3001";
+  const MIN_BET = 10;
+
+  try {
+    const http = require('http');
+    const phone = "tg_" + user.id;
+
+    // Try to get user balance from backend
+    const checkBalance = () => new Promise((resolve) => {
+      const req = http.get(
+        `${BACKEND}/api/admin/users?search=${encodeURIComponent(phone)}`,
+        { headers: { 'X-Admin-Panel': Buffer.from('admin:' + (process.env.ADMIN_PANEL_PASSWORD || 'mebt1234')).toString('base64') } },
+        (res) => {
+          let data = '';
+          res.on('data', chunk => data += chunk);
+          res.on('end', () => {
+            try {
+              const json = JSON.parse(data);
+              const u = json.users && json.users[0];
+              resolve(u ? u.balance : null);
+            } catch(e) { resolve(null); }
+          });
+        }
+      );
+      req.on('error', () => resolve(null));
+      req.setTimeout(3000, () => { req.destroy(); resolve(null); });
+    });
+
+    const balance = await checkBalance();
+
+    if (balance !== null && balance < MIN_BET) {
+      return ctx.reply(
+        `❌ *${user.first_name}፣ ቀሪ ሂሳብ በቂ አይደለም!*\n\n` +
+        `💰 ቀሪ ሂሳብ: *${parseFloat(balance).toFixed(2)} ብር*\n` +
+        `⚠️ ቢያንስ *${MIN_BET} ብር* ያስፈልጋል\n\n` +
+        `💵 ሂሳብ ለመሙላት ጨዋታ ይክፈቱ:`,
+        {
+          parse_mode: "Markdown",
+          reply_markup: {
+            inline_keyboard: [[
+              { text: "💵 ሂሳብ ሙላ", web_app: { url: WEB_APP_URL } }
+            ]]
+          }
+        }
+      );
+    }
+  } catch(e) {
+    // If balance check fails, allow join (don't block)
+    console.log("Balance check failed:", e.message);
+  }
+
   players.push(user);
   await ctx.reply(
     `✅ *${user.first_name} ተቀላቀለ!*\n👥 ጠቅላላ ተጫዋቾች: ${players.length}`,

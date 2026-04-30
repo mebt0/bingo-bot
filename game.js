@@ -139,7 +139,7 @@ function goToCardSelect(){
       }
     }
 
-    // Balance display
+    // Balance display + minimum check
     var csBalEl = document.getElementById("csBalanceAmt");
     if (csBalEl) {
       csBalEl.textContent = currentUser ? parseFloat(currentUser.balance || 0).toFixed(0) : "0";
@@ -148,6 +148,17 @@ function goToCardSelect(){
           if (data && data.ok) {
             currentUser.balance = data.balance;
             csBalEl.textContent = parseFloat(data.balance).toFixed(0);
+            // Show warning if balance < 10
+            if (data.balance < ENTRY_FEE) {
+              csBalEl.style.color = "#ef4444";
+              var prog = document.getElementById("csProgress");
+              if(prog) prog.innerHTML =
+                '<span class="prog-count" style="color:#ef4444">❌ ቀሪ ሂሳብ ' + fmtMoney(data.balance) +
+                ' — ቢያንስ ' + fmtMoney(ENTRY_FEE) + ' ያስፈልጋል</span>' +
+                '<button onclick="openMyAccount()" style="margin-left:8px;padding:4px 10px;background:#22c55e;color:white;border:none;border-radius:6px;cursor:pointer;font-size:.78rem">💵 ሙላ</button>';
+            } else {
+              csBalEl.style.color = "#22c55e";
+            }
           }
         });
       }
@@ -217,6 +228,18 @@ function renderCardPool(){
 }
 
 function selectCard(cardId){
+  // Check balance before allowing selection
+  if(currentUser && (currentUser.balance || 0) < ENTRY_FEE){
+    flashMessage("❌ ቀሪ ሂሳብ " + fmtMoney(currentUser.balance || 0) + " — ቢያንስ " + fmtMoney(ENTRY_FEE) + " ያስፈልጋል", "#ef4444");
+    // Show deposit prompt
+    setTimeout(function(){
+      if(confirm("💰 ሂሳብ ለመሙላት ወደ አካውንት ይሂዱ?")){
+        openMyAccount();
+      }
+    }, 300);
+    return;
+  }
+
   var card = poolCards.find(function(c){ return c.id === cardId; });
   if(!card) return;
 
