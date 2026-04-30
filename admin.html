@@ -1,1 +1,439 @@
-﻿PLACEHOLDER
+﻿<!DOCTYPE html>
+<html lang="am">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Adwa Bingo — Admin</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Segoe UI",Arial,sans-serif;background:#0f172a;color:#f1f5f9;min-height:100vh}
+.header{background:#1e293b;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #334155}
+.header h1{font-size:1.2rem;color:#f59e0b}
+.login-box{max-width:360px;margin:80px auto;background:#1e293b;border-radius:14px;padding:32px;border:1px solid #334155}
+.login-box h2{text-align:center;margin-bottom:20px;color:#f59e0b}
+input{width:100%;padding:11px 14px;background:#0f172a;border:1px solid #334155;border-radius:8px;color:#f1f5f9;font-size:.95rem;margin-bottom:12px}
+.btn{width:100%;padding:12px;border:none;border-radius:8px;font-size:1rem;font-weight:700;cursor:pointer}
+.btn-gold{background:#f59e0b;color:#1e293b}
+.btn-red{background:#ef4444;color:white}
+.btn-green{background:#22c55e;color:white}
+.btn-blue{background:#3b82f6;color:white}
+.btn-gray{background:#334155;color:#f1f5f9}
+.tabs{display:flex;gap:4px;padding:12px 16px;background:#1e293b;border-bottom:1px solid #334155;flex-wrap:wrap}
+.tab{padding:8px 14px;border:none;border-radius:8px;background:#334155;color:#94a3b8;font-weight:700;cursor:pointer;font-size:.82rem}
+.tab.active{background:#f59e0b;color:#1e293b}
+.panel{display:none;padding:16px}
+.panel.active{display:block}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:16px}
+.stat-card{background:#1e293b;border-radius:10px;padding:14px;border:1px solid #334155;text-align:center}
+.stat-val{font-size:1.5rem;font-weight:900;color:#f59e0b}
+.stat-lbl{font-size:.75rem;color:#94a3b8;margin-top:4px}
+.card{background:#1e293b;border-radius:10px;padding:14px;border:1px solid #334155;margin-bottom:10px}
+.row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:.85rem}
+.row span:first-child{color:#94a3b8}
+.row strong{color:#f1f5f9}
+.badge{padding:3px 8px;border-radius:5px;font-size:.72rem;font-weight:700}
+.badge-pending{background:#f59e0b22;color:#f59e0b}
+.badge-approved{background:#22c55e22;color:#22c55e}
+.badge-rejected{background:#ef444422;color:#ef4444}
+.actions{display:flex;gap:6px;margin-top:8px}
+.actions button{flex:1;padding:8px;border:none;border-radius:6px;font-weight:700;cursor:pointer;font-size:.8rem}
+.approve-btn{background:#22c55e;color:white}
+.reject-btn{background:#ef4444;color:white}
+.form-group{margin-bottom:12px}
+.form-group label{display:block;font-size:.82rem;color:#94a3b8;margin-bottom:4px}
+.form-group input{margin-bottom:0}
+.msg{padding:10px 14px;border-radius:8px;font-size:.85rem;margin-top:8px}
+.msg-ok{background:#22c55e22;color:#22c55e;border:1px solid #22c55e44}
+.msg-err{background:#ef444422;color:#ef4444;border:1px solid #ef444444}
+.empty{text-align:center;color:#94a3b8;padding:24px;font-size:.9rem}
+.user-item{background:#1e293b;border-radius:8px;padding:12px;border:1px solid #334155;margin-bottom:8px}
+.user-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.user-phone{font-weight:700;font-size:.9rem}
+.user-bal{color:#f59e0b;font-weight:900}
+.user-stats{font-size:.75rem;color:#64748b}
+.user-actions{display:flex;gap:6px;margin-top:8px}
+.user-actions button{padding:6px 10px;border:none;border-radius:6px;font-weight:700;cursor:pointer;font-size:.75rem}
+#loading{text-align:center;padding:40px;color:#94a3b8}
+</style>
+</head>
+<body>
+
+<div id="loginSection">
+<div class="login-box">
+  <h2>🔐 Admin Panel</h2>
+  <input type="password" id="pwdInput" placeholder="Admin Password" onkeydown="if(event.key==='Enter')doLogin()"/>
+  <div id="loginMsg"></div>
+  <button class="btn btn-gold" onclick="doLogin()" style="margin-top:4px">🔓 Login</button>
+</div>
+</div>
+
+<div id="mainSection" style="display:none">
+<div class="header">
+  <h1>👑 Adwa Bingo Admin</h1>
+  <button class="btn btn-gray" style="width:auto;padding:8px 16px" onclick="doLogout()">⏏ Logout</button>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('stats')">📊 Stats</button>
+  <button class="tab" onclick="switchTab('pending')">⏳ Pending</button>
+  <button class="tab" onclick="switchTab('txns')">📋 Transactions</button>
+  <button class="tab" onclick="switchTab('users')">👥 Users</button>
+  <button class="tab" onclick="switchTab('credit')">💵 Credit</button>
+  <button class="tab" onclick="switchTab('register')">➕ Register</button>
+</div>
+
+<div id="panel-stats" class="panel active">
+  <div id="statsContent"><div id="loading">⏳ Loading...</div></div>
+</div>
+
+<div id="panel-pending" class="panel">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <strong>⏳ Pending Requests</strong>
+    <button class="btn btn-blue" style="width:auto;padding:7px 14px;font-size:.8rem" onclick="loadPending()">🔄 Refresh</button>
+  </div>
+  <div id="pendingContent"></div>
+</div>
+
+<div id="panel-txns" class="panel">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <strong>📋 All Transactions</strong>
+    <button class="btn btn-blue" style="width:auto;padding:7px 14px;font-size:.8rem" onclick="loadTxns()">🔄 Refresh</button>
+  </div>
+  <div id="txnsContent"></div>
+</div>
+
+<div id="panel-users" class="panel">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <strong>👥 All Users</strong>
+    <button class="btn btn-blue" style="width:auto;padding:7px 14px;font-size:.8rem" onclick="loadUsers()">🔄 Refresh</button>
+  </div>
+  <div class="form-group" style="margin-bottom:12px">
+    <input type="text" id="searchInput" placeholder="Search by phone..." oninput="loadUsers()" style="margin:0"/>
+  </div>
+  <div id="usersContent"></div>
+</div>
+
+<div id="panel-credit" class="panel">
+  <div class="card">
+    <h3 style="margin-bottom:14px;color:#f59e0b">💵 Credit User Balance</h3>
+    <div class="form-group"><label>Phone Number</label><input type="text" id="creditPhone" placeholder="09xxxxxxxx"/></div>
+    <div class="form-group"><label>Amount (Birr)</label><input type="number" id="creditAmount" placeholder="0.00" min="1"/></div>
+    <div class="form-group"><label>Note (optional)</label><input type="text" id="creditNote" placeholder="Manual credit"/></div>
+    <button class="btn btn-green" onclick="doCredit()">✅ Credit</button>
+    <div id="creditMsg"></div>
+  </div>
+</div>
+
+<div id="panel-register" class="panel">
+  <div class="card">
+    <h3 style="margin-bottom:14px;color:#f59e0b">➕ Register New User</h3>
+    <div class="form-group"><label>Phone Number</label><input type="text" id="regPhone" placeholder="09xxxxxxxx"/></div>
+    <div class="form-group"><label>Password</label><input type="password" id="regPass" placeholder="Min 4 chars"/></div>
+    <button class="btn btn-gold" onclick="doRegister()">➕ Register</button>
+    <div id="registerMsg"></div>
+  </div>
+</div>
+</div>
+
+<script>
+var API = (function(){
+  var h = window.location.hostname;
+  var p = window.location.port;
+  if((h==="localhost"||h==="127.0.0.1")&&p==="3001") return "/api";
+  if(h==="localhost"||h==="127.0.0.1") return "http://localhost:3001/api";
+  return window.location.protocol+"//"+h+"/api";
+})();
+
+var PANEL_TOKEN = localStorage.getItem("adminPanelToken") || "";
+
+function api(method, path, body, cb){
+  var xhr = new XMLHttpRequest();
+  xhr.open(method, API+path, true);
+  xhr.setRequestHeader("Content-Type","application/json");
+  xhr.setRequestHeader("ngrok-skip-browser-warning","true");
+  if(PANEL_TOKEN) xhr.setRequestHeader("X-Admin-Panel", PANEL_TOKEN);
+  xhr.onload = function(){
+    try{ cb(null, JSON.parse(xhr.responseText)); }
+    catch(e){ cb({msg:"Parse error"},null); }
+  };
+  xhr.onerror = function(){ cb({msg:"Network error"},null); };
+  xhr.send(body ? JSON.stringify(body) : null);
+}
+
+function doLogin(){
+  var pwd = document.getElementById("pwdInput").value;
+  if(!pwd){ showMsg("loginMsg","Password required","err"); return; }
+  api("POST","/admin/panel-login",{password:pwd},function(err,data){
+    if(err||!data||!data.ok){ showMsg("loginMsg",data?data.msg:"Wrong password","err"); return; }
+    PANEL_TOKEN = data.token;
+    localStorage.setItem("adminPanelToken", PANEL_TOKEN);
+    document.getElementById("loginSection").style.display="none";
+    document.getElementById("mainSection").style.display="";
+    loadStats();
+  });
+}
+
+function doLogout(){
+  PANEL_TOKEN="";
+  localStorage.removeItem("adminPanelToken");
+  document.getElementById("loginSection").style.display="";
+  document.getElementById("mainSection").style.display="none";
+  document.getElementById("pwdInput").value="";
+}
+
+// Auto-login if token saved
+if(PANEL_TOKEN){
+  api("GET","/admin/stats",null,function(err,data){
+    if(data&&data.ok){
+      document.getElementById("loginSection").style.display="none";
+      document.getElementById("mainSection").style.display="";
+      loadStats();
+    } else {
+      PANEL_TOKEN="";
+      localStorage.removeItem("adminPanelToken");
+    }
+  });
+}
+
+function switchTab(name){
+  document.querySelectorAll(".tab").forEach(function(t,i){
+    t.classList.toggle("active", t.getAttribute("onclick")==="switchTab('"+name+"')");
+  });
+  document.querySelectorAll(".panel").forEach(function(p){ p.classList.remove("active"); });
+  document.getElementById("panel-"+name).classList.add("active");
+  if(name==="stats")    loadStats();
+  if(name==="pending")  loadPending();
+  if(name==="txns")     loadTxns();
+  if(name==="users")    loadUsers();
+}
+
+function fmt(n){ return parseFloat(n||0).toFixed(2)+" Birr"; }
+
+function showMsg(id,msg,type){
+  var el=document.getElementById(id);
+  if(!el)return;
+  el.className="msg msg-"+(type==="ok"?"ok":"err");
+  el.textContent=msg;
+  el.style.display="";
+  setTimeout(function(){el.style.display="none";},4000);
+}
+
+// ── Stats ──────────────────────────────────────────────────────
+function loadStats(){
+  document.getElementById("statsContent").innerHTML='<div id="loading">⏳ Loading...</div>';
+  api("GET","/admin/stats",null,function(err,data){
+    if(err||!data||!data.ok){
+      document.getElementById("statsContent").innerHTML='<div class="empty">❌ Failed to load stats</div>';
+      return;
+    }
+    var s=data.stats;
+    document.getElementById("statsContent").innerHTML=
+      '<div class="stats-grid">'+
+        '<div class="stat-card"><div class="stat-val">'+s.users+'</div><div class="stat-lbl">👥 Users</div></div>'+
+        '<div class="stat-card"><div class="stat-val">'+fmt(s.total_balance)+'</div><div class="stat-lbl">💰 Total Balance</div></div>'+
+        '<div class="stat-card"><div class="stat-val" style="color:#f59e0b">'+(s.pending_dep+s.pending_wdr)+'</div><div class="stat-lbl">⏳ Pending</div></div>'+
+        '<div class="stat-card"><div class="stat-val">'+s.games+'</div><div class="stat-lbl">🎮 Games</div></div>'+
+        '<div class="stat-card"><div class="stat-val">'+fmt(s.total_prize)+'</div><div class="stat-lbl">🏆 Total Prize</div></div>'+
+        '<div class="stat-card"><div class="stat-val">'+fmt(s.total_house)+'</div><div class="stat-lbl">🏦 House Cut</div></div>'+
+      '</div>';
+  });
+}
+
+// ── Pending ────────────────────────────────────────────────────
+function loadPending(){
+  document.getElementById("pendingContent").innerHTML='<div id="loading">⏳ Loading...</div>';
+  var deps=[],wdrs=[];
+  api("GET","/admin/deposits/pending",null,function(err,d){
+    deps=(d&&d.requests)||[];
+    api("GET","/admin/withdrawals/pending",null,function(err2,w){
+      wdrs=(w&&w.requests)||[];
+      renderPending(deps,wdrs);
+    });
+  });
+}
+
+function renderPending(deps,wdrs){
+  var html="";
+  deps.forEach(function(r){
+    html+='<div class="card">'+
+      '<div class="row"><span>Type</span><strong>💵 Deposit</strong></div>'+
+      '<div class="row"><span>Phone</span><strong>'+r.phone+'</strong></div>'+
+      '<div class="row"><span>Amount</span><strong style="color:#22c55e">+'+fmt(r.amount)+'</strong></div>'+
+      (r.tx_id?'<div class="row"><span>TXN ID</span><strong>'+r.tx_id+'</strong></div>':'')+
+      '<div class="row"><span>Date</span><strong>'+new Date(r.created_at).toLocaleString()+'</strong></div>'+
+      '<div class="actions">'+
+        '<button class="approve-btn" onclick="approveReq(\'deposit\','+r.id+',this)">✅ Approve (+Balance)</button>'+
+        '<button class="reject-btn"  onclick="rejectReq(\'deposit\','+r.id+',this)">❌ Reject</button>'+
+      '</div></div>';
+  });
+  wdrs.forEach(function(r){
+    html+='<div class="card">'+
+      '<div class="row"><span>Type</span><strong>💸 Withdraw</strong></div>'+
+      '<div class="row"><span>Phone</span><strong>'+r.phone+'</strong></div>'+
+      '<div class="row"><span>Amount</span><strong style="color:#ef4444">-'+fmt(r.amount)+'</strong></div>'+
+      '<div class="row"><span>Account</span><strong>'+r.account_type+': '+r.account_number+'</strong></div>'+
+      '<div class="row"><span>Date</span><strong>'+new Date(r.created_at).toLocaleString()+'</strong></div>'+
+      '<div class="actions">'+
+        '<button class="approve-btn" onclick="approveReq(\'withdraw\','+r.id+',this)">✅ Approve (Already Deducted)</button>'+
+        '<button class="reject-btn"  onclick="rejectReq(\'withdraw\','+r.id+',this)">↩️ Reject (+Refund)</button>'+
+      '</div></div>';
+  });
+  if(!html) html='<div class="empty">✅ No pending requests</div>';
+  document.getElementById("pendingContent").innerHTML=html;
+}
+
+function approveReq(type,id,btn){
+  btn.disabled=true;
+  var path=type==="deposit"?"/admin/deposits/"+id+"/approve":"/admin/withdrawals/"+id+"/approve";
+  api("POST",path,{},function(err,data){
+    if(data&&data.ok){ alert("✅ "+data.msg); loadPending(); }
+    else{ alert("❌ "+(data?data.msg:"Error")); btn.disabled=false; }
+  });
+}
+
+function rejectReq(type,id,btn){
+  btn.disabled=true;
+  var path=type==="deposit"?"/admin/deposits/"+id+"/reject":"/admin/withdrawals/"+id+"/reject";
+  api("POST",path,{note:"Admin rejected"},function(err,data){
+    if(data&&data.ok){ alert("✅ "+data.msg); loadPending(); }
+    else{ alert("❌ "+(data?data.msg:"Error")); btn.disabled=false; }
+  });
+}
+
+// ── Transactions ───────────────────────────────────────────────
+function loadTxns(){
+  document.getElementById("txnsContent").innerHTML='<div id="loading">⏳ Loading...</div>';
+  api("GET","/admin/transactions?limit=100",null,function(err,data){
+    if(err||!data||!data.ok){
+      document.getElementById("txnsContent").innerHTML='<div class="empty">❌ Failed</div>';
+      return;
+    }
+    var t=data.totals||{};
+    var dep=t.deposit||{};var wdr=t.withdraw||{};
+    var html='<div class="stats-grid" style="margin-bottom:14px">'+
+      '<div class="stat-card"><div class="stat-val" style="color:#22c55e">'+fmt(dep.approved)+'</div><div class="stat-lbl">💵 Deposits Approved</div></div>'+
+      '<div class="stat-card"><div class="stat-val" style="color:#f59e0b">'+fmt(dep.pending)+'</div><div class="stat-lbl">⏳ Deposits Pending</div></div>'+
+      '<div class="stat-card"><div class="stat-val" style="color:#ef4444">'+fmt(wdr.approved)+'</div><div class="stat-lbl">💸 Withdrawals Approved</div></div>'+
+      '<div class="stat-card"><div class="stat-val" style="color:#f59e0b">'+fmt(wdr.pending)+'</div><div class="stat-lbl">⏳ Withdrawals Pending</div></div>'+
+    '</div>';
+    var rows=[];
+    (data.deposits||[]).forEach(function(d){ rows.push({type:"deposit",data:d}); });
+    (data.withdrawals||[]).forEach(function(w){ rows.push({type:"withdraw",data:w}); });
+    rows.sort(function(a,b){ return new Date(b.data.created_at)-new Date(a.data.created_at); });
+    rows.forEach(function(r){
+      var d=r.data;
+      var isDep=r.type==="deposit";
+      var statusClass=d.status==="approved"?"badge-approved":d.status==="pending"?"badge-pending":"badge-rejected";
+      html+='<div class="card">'+
+        '<div class="row"><span>'+(isDep?"💵 Deposit":"💸 Withdraw")+'</span>'+
+          '<span class="badge '+statusClass+'">'+d.status+'</span></div>'+
+        '<div class="row"><span>Phone</span><strong>'+d.phone+'</strong></div>'+
+        '<div class="row"><span>Amount</span><strong style="color:'+(isDep?"#22c55e":"#ef4444")+'">'+(isDep?"+":"-")+fmt(d.amount)+'</strong></div>'+
+        (d.tx_id?'<div class="row"><span>TXN</span><strong>'+d.tx_id+'</strong></div>':'')+
+        (d.account_number?'<div class="row"><span>Account</span><strong>'+d.account_type+': '+d.account_number+'</strong></div>':'')+
+        '<div class="row"><span>Date</span><strong>'+new Date(d.created_at).toLocaleString()+'</strong></div>'+
+      '</div>';
+    });
+    if(!rows.length) html+='<div class="empty">No transactions yet</div>';
+    document.getElementById("txnsContent").innerHTML=html;
+  });
+}
+
+// ── Users ──────────────────────────────────────────────────────
+function loadUsers(){
+  var search=document.getElementById("searchInput")?document.getElementById("searchInput").value:"";
+  var url="/admin/users?limit=100"+(search?"&search="+encodeURIComponent(search):"");
+  document.getElementById("usersContent").innerHTML='<div id="loading">⏳ Loading...</div>';
+  api("GET",url,null,function(err,data){
+    if(err||!data||!data.ok){
+      document.getElementById("usersContent").innerHTML='<div class="empty">❌ Failed</div>';
+      return;
+    }
+    var html="";
+    (data.users||[]).forEach(function(u){
+      html+='<div class="user-item">'+
+        '<div class="user-top">'+
+          '<span class="user-phone">'+(u.is_admin?"👑 ":"👤 ")+u.phone+'</span>'+
+          '<span class="user-bal">'+fmt(u.balance)+'</span>'+
+        '</div>'+
+        '<div class="user-stats">🎮 '+u.games_played+' games | 🏆 '+u.games_won+' wins | 💸 '+fmt(u.total_spent)+' spent</div>'+
+        (u.is_banned?'<div style="color:#ef4444;font-size:.75rem;margin-top:4px">🚫 BANNED</div>':'')+
+        '<div class="user-actions">'+
+          '<button style="background:#22c55e;color:white" onclick="quickCredit('+u.id+',\''+u.phone+'\')">💵 Credit</button>'+
+          (u.is_banned
+            ?'<button style="background:#64748b;color:white" onclick="unbanUser('+u.id+',this)">🔓 Unban</button>'
+            :'<button style="background:#ef4444;color:white" onclick="banUser('+u.id+',this)">🚫 Ban</button>')+
+        '</div>'+
+      '</div>';
+    });
+    if(!html) html='<div class="empty">No users found</div>';
+    document.getElementById("usersContent").innerHTML=html;
+  });
+}
+
+function quickCredit(userId,phone){
+  var amt=prompt("Credit amount for "+phone+"?");
+  if(!amt||isNaN(parseFloat(amt)))return;
+  api("POST","/admin/users/"+userId+"/credit",{amount:parseFloat(amt)},function(err,data){
+    if(data&&data.ok){ alert("✅ "+data.msg); loadUsers(); }
+    else alert("❌ "+(data?data.msg:"Error"));
+  });
+}
+
+function banUser(userId,btn){
+  if(!confirm("Ban this user?"))return;
+  btn.disabled=true;
+  api("POST","/admin/users/"+userId+"/ban",{},function(err,data){
+    if(data&&data.ok){ loadUsers(); }
+    else{ btn.disabled=false; alert("❌ "+(data?data.msg:"Error")); }
+  });
+}
+
+function unbanUser(userId,btn){
+  btn.disabled=true;
+  api("POST","/admin/users/"+userId+"/unban",{},function(err,data){
+    if(data&&data.ok){ loadUsers(); }
+    else{ btn.disabled=false; alert("❌ "+(data?data.msg:"Error")); }
+  });
+}
+
+// ── Credit ─────────────────────────────────────────────────────
+function doCredit(){
+  var phone=(document.getElementById("creditPhone").value||"").trim();
+  var amount=parseFloat(document.getElementById("creditAmount").value);
+  var note=(document.getElementById("creditNote").value||"Manual credit").trim();
+  if(!phone||isNaN(amount)||amount<=0){ showMsg("creditMsg","Phone and amount required","err"); return; }
+  api("GET","/admin/users?search="+encodeURIComponent(phone),null,function(err,data){
+    if(err||!data.ok||!data.users.length){ showMsg("creditMsg","User not found","err"); return; }
+    var userId=data.users[0].id;
+    api("POST","/admin/users/"+userId+"/credit",{amount:amount,note:note},function(err2,data2){
+      if(data2&&data2.ok){
+        showMsg("creditMsg","✅ "+data2.msg,"ok");
+        document.getElementById("creditPhone").value="";
+        document.getElementById("creditAmount").value="";
+      } else {
+        showMsg("creditMsg","❌ "+(data2?data2.msg:"Error"),"err");
+      }
+    });
+  });
+}
+
+// ── Register ───────────────────────────────────────────────────
+function doRegister(){
+  var phone=(document.getElementById("regPhone").value||"").trim();
+  var pass=document.getElementById("regPass").value;
+  if(!phone||phone.length<10){ showMsg("registerMsg","Valid phone required","err"); return; }
+  if(pass.length<4){ showMsg("registerMsg","Password min 4 chars","err"); return; }
+  api("POST","/auth/register",{phone:phone,password:pass,full_name:phone},function(err,data){
+    if(data&&data.ok){
+      showMsg("registerMsg","✅ Registered: "+phone,"ok");
+      document.getElementById("regPhone").value="";
+      document.getElementById("regPass").value="";
+    } else {
+      showMsg("registerMsg","❌ "+(data?data.msg:"Error"),"err");
+    }
+  });
+}
+</script>
+</body>
+</html>
