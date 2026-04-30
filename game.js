@@ -111,35 +111,37 @@ function goToCardSelect(){
   // Auto-select ALL 400 cards for player 0
   playerCards[0] = poolCards.slice(); // all 400
 
-  // Admin: go straight to game launch
-  if(currentUserIsAdmin()){
-    launchGame();
-    return;
-  }
-
-  // Non-admin: show card select screen (read-only view)
+  // Always show card select screen with all 400 pre-selected (orange)
   showScreen("cardSelectScreen");
+
   setTimeout(function() {
     buildPlayerTabs();
-    renderCardPool();
+    renderCardPool(); // all 400 show as orange (selected)
     updateCsStatus();
     updatePrizePreview();
 
     var startBtn = document.getElementById("startGameBtn");
-    if(startBtn) startBtn.style.display = "none";
+    if(startBtn){
+      if(currentUserIsAdmin()){
+        startBtn.style.display = "";
+        startBtn.disabled = false;
+        startBtn.classList.add("btn-ready");
+      } else {
+        startBtn.style.display = "none";
+        var prog = document.getElementById("csProgress");
+        if(prog) prog.innerHTML = '<span class="prog-count" style="color:#f59e0b">⏳ አስተዳዳሪ ጨዋታ ሲጀምር ይጠብቁ...</span>';
+      }
+    }
 
-    var prog = document.getElementById("csProgress");
-    if(prog) prog.innerHTML = '<span class="prog-count" style="color:#f59e0b">⏳ አስተዳዳሪ ጨዋታ ሲጀምር ይጠብቁ...</span>';
-
+    // Balance display
     var csBalEl = document.getElementById("csBalanceAmt");
     if (csBalEl) {
-      csBalEl.textContent = currentUser ? fmtMoney(currentUser.balance || 0) : "—";
+      csBalEl.textContent = currentUser ? parseFloat(currentUser.balance || 0).toFixed(0) : "0";
       if (currentUser) {
         apiCall("GET", "/wallet/balance", null, function(err, data) {
           if (data && data.ok) {
             currentUser.balance = data.balance;
-            csBalEl.textContent = fmtMoney(data.balance);
-            csBalEl.style.color = data.balance < ENTRY_FEE ? "#ef4444" : "#22c55e";
+            csBalEl.textContent = parseFloat(data.balance).toFixed(0);
           }
         });
       }
@@ -209,6 +211,9 @@ function renderCardPool(){
 }
 
 function selectCard(cardId){
+  // Non-admins cannot change card selection — all 400 are pre-selected
+  if(!currentUserIsAdmin()) return;
+
   var card = poolCards.find(function(c){ return c.id === cardId; });
   if(!card) { console.error("Card not found:", cardId); return; }
 
