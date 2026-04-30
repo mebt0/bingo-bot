@@ -702,31 +702,22 @@ button:disabled { opacity:.4; cursor:not-allowed; transform:none; }
   line-height: 1;
 }
 
-/* Marked cell — colorful spinner like the image */
+/* Marked cell — show number with colored background */
 .card-cell.marked {
-  background: #fefce8 !important;
-  color: transparent !important;
+  color: white !important;
+  font-size: .9rem !important;
+  font-weight: 900 !important;
+  transform: scale(0.95) !important;
   border: none !important;
-  font-size: 0 !important;
-  transform: none !important;
-  box-shadow: none !important;
   position: relative;
 }
-.card-cell.marked::before {
-  content: '🎡';
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.3rem;
-  animation: spin-slow 3s linear infinite;
-}
-.card-cell.marked::after { content: none !important; }
-@keyframes spin-slow {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-}
+.card-cell.marked.col-0 { background: #e74c3c !important; box-shadow: 0 0 6px rgba(231,76,60,.5); }
+.card-cell.marked.col-1 { background: #e67e22 !important; box-shadow: 0 0 6px rgba(230,126,34,.5); }
+.card-cell.marked.col-2 { background: #9b59b6 !important; box-shadow: 0 0 6px rgba(155,89,182,.5); }
+.card-cell.marked.col-3 { background: #27ae60 !important; box-shadow: 0 0 6px rgba(39,174,96,.5); }
+.card-cell.marked.col-4 { background: #2980b9 !important; box-shadow: 0 0 6px rgba(41,128,185,.5); }
+.card-cell.marked::before { content: none !important; }
+.card-cell.marked::after  { content: none !important; }
 
 /* Called but not yet marked — green circle like the image */
 .card-cell.called-not-marked {
