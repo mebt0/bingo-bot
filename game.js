@@ -67,11 +67,11 @@ function applyGameControlVisibility() {
   adminOnly.forEach(function(id) {
     var el = document.getElementById(id);
     if (!el) return;
-    if (!isAdmin) {
-      el.style.display = "none";
-    }
-    // stopGameBtn and cancelCountdownBtn have their own show/hide logic — skip
+    if (!isAdmin) el.style.display = "none";
   });
+  // Speed control — admin only
+  var speedCtrl = document.querySelector(".speed-control");
+  if (speedCtrl) speedCtrl.style.display = isAdmin ? "" : "none";
   // Number board cells — disable for non-admins
   var board = document.getElementById("numberBoard");
   if (board) {
@@ -400,6 +400,9 @@ function _launchGameAfterFee(totalCards) {
   buildWeights(); setProbMode(probMode); buildNumberBoard(); renderCards();
   showScreen("gameScreen"); updateAutoBadge();
   applyGameControlVisibility(); // hide controls from non-admins
+  // Apply current slider speed
+  var slider = document.getElementById("speedSlider");
+  if (slider) setSpeed(slider.value);
 
   // ── 30-second countdown ───────────────────────────────────
   var secondsLeft = 30;
@@ -531,13 +534,16 @@ function weightedDraw(){
 }
 
 function setSpeed(val){
-  callSpeed=parseInt(val);
-  // 1=2s, 2=4s, 3=6s, 4=9s, 5=13s
-  var intervals=[2000,4000,6000,9000,13000];
-  AUTO_INTERVAL=intervals[callSpeed-1]||4000;
-  var labels=["⚡ ፈጣን","🔥 ፈጣን"];
-  var el=document.getElementById("speedLabel");
-  if(el)el.textContent=labels[callSpeed-1]||"";
+  callSpeed = parseInt(val);
+  // 1=fastest(2s)  2=fast(4s)  3=medium(7s)  4=slow(11s)  5=slowest(16s)
+  var intervals = [2000, 4000, 7000, 11000, 16000];
+  var labels    = ["⚡ ፈጣን", "🔥 ፈጣን", "⚖️ መካከለኛ", "🐢 ዘገምተኛ", "🐌 በጣም ዘገምተኛ"];
+  AUTO_INTERVAL = intervals[callSpeed - 1] || 7000;
+  var el = document.getElementById("speedLabel");
+  if (el) el.textContent = labels[callSpeed - 1] || "⚖️ መካከለኛ";
+  // Update slider position to match
+  var slider = document.getElementById("speedSlider");
+  if (slider && slider.value !== String(callSpeed)) slider.value = callSpeed;
 }
 
 function scheduleNext(){
