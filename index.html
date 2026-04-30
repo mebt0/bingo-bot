@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="am">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"/>
+  <meta name="color-scheme" content="dark"/>
+  <title>አማርኛ ቢንጎ</title>
+  <!-- Telegram Web App SDK — must be first script -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<!-- ══════════════ LOGOUT CONFIRM DIALOG ══════════════ -->
+<div id="logoutDialog" class="dialog-overlay hidden">
+  <div class="dialog-box logout-dialog">
+    <div class="logout-icon">👋</div>
+    <h3 style="margin:0 0 6px;font-size:1.2rem">ለቀቅ ይፈልጋሉ?</h3>
+    <p class="logout-sub">ከ <strong id="logoutUserName">—</strong> አካውንት ይወጣሉ</p>
+    <div class="logout-actions">
+      <button class="btn-logout-confirm" onclick="confirmLogout()">✅ አዎ፣ ውጣ</button>
+      <button class="btn-logout-cancel"  onclick="cancelLogout()">↩️ ተመለስ</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ MAIN MENU ══════════════ -->
+<div id="mainMenu" class="screen active">
+
+  <!-- User bar -->
+  <div class="user-bar">
+    <div class="user-avatar-wrap">
+      <span class="user-avatar" id="userAvatarIcon">👤</span>
+    </div>
+    <div class="user-info">
+      <div class="user-name" id="userBarName">—</div>
+      <div class="user-phone" id="userBarPhone">—</div>
+    </div>
+    <div class="user-balance-bar">
+      <div class="ub-label">💰 ቀሪ ሂሳብ</div>
+      <div class="ub-amount" id="userBarBalance">0.00 ብር</div>
+    </div>
+    <button class="btn-logout" onclick="doLogout()" title="ውጣ">
+      <span>⏏</span>
+    </button>
+  </div>
+
+  <!-- Logo -->
+  <div class="logo">🎯</div>
+  <h1>አማርኛ ቢንጎ</h1>
+  <p class="subtitle">Amharic Bingo Game</p>
+
+  <!-- Player count -->
+  <div class="menu-section">
+    <label>👥 የተጫዋቾች ቁጥር</label>
+    <div class="player-counter">
+      <button onclick="changePlayerCount(-1)">−</button>
+      <span id="playerCountDisplay">2</span>
+      <button onclick="changePlayerCount(1)">+</button>
+    </div>
+  </div>
+
+  <!-- Voice settings -->
+  <div class="menu-section voice-panel">
+    <label>🔊 ድምፅ ቅንብሮች</label>
+    <div id="voiceStatus" class="vs-warn">🔊 ነባሪ ድምፅ</div>
+    <div class="voice-row">
+      <span>ድምፅ:</span>
+      <select id="voiceSelect" onchange="onVoiceSelect(this.value)">
+        <option value="">— Auto —</option>
+      </select>
+    </div>
+    <div class="voice-row">
+      <span>ድምጽ:</span>
+      <input type="range" min="0.1" max="1" step="0.05" value="1" oninput="onVolumeChange(this.value)"/>
+      <span id="volVal">100%</span>
+    </div>
+    <div class="voice-row">
+      <span>ፍጥነት:</span>
+      <input type="range" min="0.5" max="1.5" step="0.05" value="0.8" oninput="onRateChange(this.value)"/>
+      <span id="rateVal">0.8x</span>
+    </div>
+    <div class="voice-btn-row">
+      <button class="btn-sm-blue" onclick="testVoice()">🔊 ሙከራ</button>
+      <button class="btn-sm-gray" id="muteBtn" onclick="toggleMuteBtn()">🔊 ዝጋ</button>
+    </div>
+  </div>
+
+  <!-- Action buttons -->
+  <button class="btn-primary"   onclick="goToCardSelect()">🎮 ካርድ ምረጥ ▶</button>
+  <button class="btn-account"   onclick="openMyAccount()">👤 የእኔ አካውንት</button>
+  <button class="btn-wallet"    id="adminPanelBtn_menu" onclick="openAdminPanel()" style="display:none">� አስተዳዳሪ ፓነል</button>
+  <button class="btn-secondary" onclick="showScreen('rulesScreen')">📋 ህጎች</button>
+
+</div>
+
+<!-- ══════════════ MY ACCOUNT ══════════════ -->
+<div id="myAccountScreen" class="screen">
+  <div class="acc-header">
+    <button class="btn-back" onclick="showScreen('mainMenu')">◀</button>
+    <h2>👤 የእኔ አካውንት</h2>
+    <div style="display:flex;gap:6px;align-items:center">
+      <button class="btn-sm-gray" onclick="openMyAccount()">🔄</button>
+      <button class="btn-logout" onclick="doLogout()" title="ውጣ" style="padding:6px 9px;font-size:.85rem">⏏</button>
+    </div>
+  </div>
+
+  <!-- Balance card -->
+  <div class="acc-balance-card">
+    <div class="abc-top">
+      <div class="abc-avatar">👤</div>
+      <div class="abc-info">
+        <div class="abc-phone" id="accPhone">—</div>
+        <div class="abc-label">ቀሪ ሂሳብ</div>
+        <div class="abc-amount" id="accBalance">0.00 ብር</div>
+      </div>
+    </div>
+    <div class="abc-stats">
+      <div class="abc-stat"><span id="accGamesPlayed">0</span><small>ጨዋታዎች</small></div>
+      <div class="abc-stat"><span id="accGamesWon">0</span><small>አሸናፊ</small></div>
+      <div class="abc-stat"><span id="accTotalWon">0</span><small>ያሸነፉ ብር</small></div>
+    </div>
+  </div>
+
+  <!-- Action tabs -->
+  <div class="acc-tabs">
+    <button class="acc-tab active" id="acctab-deposit"  onclick="accTab('deposit')">💵 ገቢ</button>
+    <button class="acc-tab"        id="acctab-withdraw" onclick="accTab('withdraw')">💸 ወጪ</button>
+    <button class="acc-tab"        id="acctab-history"  onclick="accTab('history')">📋 ታሪክ</button>
+  </div>
+
+  <!-- ── DEPOSIT PANEL ── -->
+  <div class="acc-panel active" id="accpanel-deposit">
+    <div class="acc-form">
+      <div class="payment-methods">
+        <div class="pm-label">💳 TeleBirr በኩል ይክፈሉ</div>
+        <div class="pm-telebirr-card">
+          <div class="pm-tb-logo">📱</div>
+          <div class="pm-tb-info">
+            <div class="pm-tb-title">TeleBirr</div>
+            <div class="pm-tb-number">0924 787 903</div>
+            <div class="pm-tb-name">አካውንት: ቢንጎ ጨዋታ</div>
+          </div>
+        </div>
+        <div class="pm-tb-steps">
+          <div class="pm-step">1️⃣ TeleBirr ከፍተው ወደ <strong>0924 787 903</strong> ይላኩ</div>
+          <div class="pm-step">2️⃣ የማስተላለፊያ ቁጥሩን (Transaction ID) ከዚህ ያስገቡ</div>
+          <div class="pm-step">3️⃣ ጥያቄ ይላኩ — ሂሳብዎ ወዲያው ይሞላል</div>
+        </div>
+      </div>
+      <div class="acc-field">
+        <label>💰 መጠን (ብር)</label>
+        <div class="acc-quick">
+          <button onclick="setAccAmt(20)">20</button>
+          <button onclick="setAccAmt(50)">50</button>
+          <button onclick="setAccAmt(100)">100</button>
+          <button onclick="setAccAmt(200)">200</button>
+          <button onclick="setAccAmt(500)">500</button>
+          <button onclick="setAccAmt(1000)">1000</button>
+        </div>
+        <input type="number" id="accDepAmount" placeholder="0.00" min="1" class="w-input acc-input"/>
+      </div>
+      <div class="acc-field">
+        <label>🔢 የTeleBirr ማስተላለፊያ ቁጥር (Transaction ID)</label>
+        <input type="text" id="accDepTxId" placeholder="ለምሳሌ: TXN123456" class="w-input acc-input"/>
+      </div>
+      <div id="accDepMsg" class="acc-msg hidden"></div>
+      <button class="btn-deposit acc-submit" onclick="doAccDeposit()">💵 ገቢ ጠይቅ</button>
+      <p class="acc-note">⚠️ TeleBirr ብቻ ይቀበላል። Transaction ID ካለ ሂሳብዎ ወዲያው ይሞላል።</p>
+    </div>
+  </div>
+
+  <!-- ── WITHDRAW PANEL ── -->
+  <div class="acc-panel" id="accpanel-withdraw">
+    <div class="acc-form">
+      <div class="acc-bal-display">
+        💰 ቀሪ ሂሳብ: <strong id="accWdrBal">0.00 ብር</strong>
+      </div>
+      <div class="pm-telebirr-card" style="margin-bottom:14px">
+        <div class="pm-tb-logo">📱</div>
+        <div class="pm-tb-info">
+          <div class="pm-tb-title">TeleBirr ወደ</div>
+          <div class="pm-tb-name">ወጪ ወደ TeleBirr ቁጥርዎ ይላካል</div>
+        </div>
+      </div>
+      <div class="acc-field">
+        <label>📱 TeleBirr ቁጥር</label>
+        <input type="tel" id="accWdrAccount" placeholder="09xxxxxxxx" class="w-input acc-input"/>
+      </div>
+      <div class="acc-field">
+        <label>💸 መጠን (ብር)</label>
+        <div class="acc-quick">
+          <button onclick="setAccWdr(10)">10</button>
+          <button onclick="setAccWdr(20)">20</button>
+          <button onclick="setAccWdr(50)">50</button>
+          <button onclick="setAccWdr(100)">100</button>
+        </div>
+        <input type="number" id="accWdrAmount" placeholder="0.00" min="1" class="w-input acc-input"/>
+      </div>
+      <div id="accWdrMsg" class="acc-msg hidden"></div>
+      <button class="btn-withdraw acc-submit" onclick="doAccWithdraw()">💸 ወጪ ጠይቅ</button>
+      <p class="acc-note">⚠️ ዝቅተኛ ማውጫ 10 ብር ነው። ጥያቄዎ ለአስተዳዳሪ ይላካል።</p>
+    </div>
+  </div>
+
+  <!-- ── HISTORY PANEL ── -->
+  <div class="acc-panel" id="accpanel-history">
+    <div id="accHistoryList" class="acc-history"></div>
+  </div>
+</div>
+
+<!-- ══════════════ ADMIN PANEL (WALLET SCREEN) ══════════════ -->
+<div id="walletScreen" class="screen wallet-screen">
+
+  <!-- Header -->
+  <div class="admin-header">
+    <button class="btn-back" onclick="showScreen('mainMenu')">◀</button>
+    <div class="admin-header-info">
+      <h2>👑 አስተዳዳሪ ፓነል</h2>
+      <span class="admin-phone">0924 787 903</span>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center">
+      <button class="btn-sm-blue" onclick="loadAdminStats()" title="Refresh">🔄</button>
+      <button class="btn-logout" onclick="doLogout()" title="ውጣ" style="padding:6px 9px;font-size:.85rem">⏏</button>
+    </div>
+  </div>
+
+  <!-- Stats bar -->
+  <div class="admin-stats-bar" id="adminStatsBar">
+    <div class="ast-item">
+      <span class="ast-val" id="statUsers">—</span>
+      <span class="ast-lbl">👥 ተጠቃሚ</span>
+    </div>
+    <div class="ast-item">
+      <span class="ast-val" id="statBalance">—</span>
+      <span class="ast-lbl">💰 ጠቅላላ</span>
+    </div>
+    <div class="ast-item ast-warn" id="statPendingWrap">
+      <span class="ast-val" id="statPending">—</span>
+      <span class="ast-lbl">⏳ ጥያቄ</span>
+    </div>
+    <div class="ast-item">
+      <span class="ast-val" id="statGames">—</span>
+      <span class="ast-lbl">🎮 ጨዋታ</span>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="wallet-tabs">
+    <button class="wtab" id="wtab-pending"  onclick="wTab('pending')">⏳ ጥያቄዎች</button>
+    <button class="wtab active" id="wtab-lookup" onclick="wTab('lookup')">🔍 ደንበኛ</button>
+    <button class="wtab" id="wtab-deposit"  onclick="wTab('deposit')">💵 ገቢ ስጥ</button>
+    <button class="wtab" id="wtab-register" onclick="wTab('register')">➕ ምዝገባ</button>
+    <button class="wtab" id="wtab-all"      onclick="wTab('all')">👥 ሁሉም</button>
+    <button class="wtab" id="wtab-txns"     onclick="wTab('txns')">📋 ታሪክ</button>
+  </div>
+
+  <!-- ── PENDING REQUESTS (default) ── -->
+  <div class="wpanel" id="wpanel-pending">
+    <div class="pending-header">
+      <span class="pending-title">⏳ የTeleBirr ጥያቄዎች</span>
+      <button class="btn-sm-blue" onclick="renderPendingRequests()">🔄 አዘምን</button>
+    </div>
+    <div id="pendingRequestsList" class="pending-list"></div>
+  </div>
+
+  <!-- ── LOOKUP ── -->
+  <div class="wpanel active" id="wpanel-lookup">
+    <div class="wallet-form">
+      <label>📱 ስልክ ቁጥር ፈልግ</label>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="lookupId" placeholder="09xxxxxxxx" class="w-input"
+               onkeydown="if(event.key==='Enter')doLookup()" style="flex:1"/>
+        <button class="btn-deposit w-btn" style="flex:0;padding:10px 16px" onclick="doLookup()">🔍</button>
+      </div>
+    </div>
+    <div id="lookupResult" class="wallet-result hidden"></div>
+  </div>
+
+  <!-- ── DEPOSIT (admin credit) ── -->
+  <div class="wpanel" id="wpanel-deposit">
+    <div class="wallet-form">
+      <div class="pm-telebirr-card" style="margin-bottom:14px">
+        <div class="pm-tb-logo">📱</div>
+        <div class="pm-tb-info">
+          <div class="pm-tb-title">TeleBirr ቁጥር</div>
+          <div class="pm-tb-number">0924 787 903</div>
+          <div class="pm-tb-name">ወደዚህ ቁጥር ይላኩ</div>
+        </div>
+      </div>
+      <label>📱 ደንበኛ ስልክ ቁጥር</label>
+      <input type="text" id="depId" placeholder="09xxxxxxxx" class="w-input"/>
+      <label>💵 መጠን (ብር)</label>
+      <div class="amount-row">
+        <input type="number" id="depAmount" placeholder="0.00" min="1" class="w-input"/>
+        <div class="quick-amounts">
+          <button onclick="setAmt('depAmount',10)">10</button>
+          <button onclick="setAmt('depAmount',50)">50</button>
+          <button onclick="setAmt('depAmount',100)">100</button>
+          <button onclick="setAmt('depAmount',500)">500</button>
+        </div>
+      </div>
+      <label>🔢 TeleBirr Transaction ID</label>
+      <input type="text" id="depTxId" placeholder="TXN123456" class="w-input"/>
+      <button class="btn-deposit w-btn" onclick="doDeposit()">✅ ገቢ አስገባ</button>
+    </div>
+    <div id="depositResult" class="wallet-result hidden"></div>
+  </div>
+
+  <!-- ── REGISTER ── -->
+  <div class="wpanel" id="wpanel-register">
+    <div class="wallet-form">
+      <label>📱 ስልክ ቁጥር</label>
+      <input type="tel" id="regPhone2" placeholder="09xxxxxxxx" class="w-input" maxlength="13" oninput="fmtPhone(this)"/>
+      <label>🔒 የይለፍ ቃል</label>
+      <input type="password" id="regPass3" placeholder="ቢያንስ 4 ቁጥር" class="w-input" maxlength="20"/>
+      <button class="btn-primary w-btn" onclick="doAdminRegister()">➕ ምዝገባ</button>
+    </div>
+    <div id="registerResult" class="wallet-result hidden"></div>
+  </div>
+
+  <!-- ── ALL USERS ── -->
+  <div class="wpanel" id="wpanel-all">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <span style="font-weight:700;font-size:.9rem">👥 ሁሉም ተጠቃሚዎች</span>
+      <button class="btn-sm-blue" onclick="renderAllCustomers()">🔄 አዘምን</button>
+    </div>
+    <div id="allCustomers" class="customers-list"></div>
+  </div><!-- /wpanel-all -->
+
+  <!-- ── TRANSACTIONS HISTORY ── -->
+  <div class="wpanel" id="wpanel-txns">
+    <!-- Summary cards -->
+    <div id="txnSummary" class="txn-summary"></div>
+    <!-- Filter tabs -->
+    <div class="txn-filter-row">
+      <button class="txn-filter active" id="txnf-all"      onclick="filterTxns('all')">📋 ሁሉም</button>
+      <button class="txn-filter"        id="txnf-deposit"  onclick="filterTxns('deposit')">💵 ገቢ</button>
+      <button class="txn-filter"        id="txnf-withdraw" onclick="filterTxns('withdraw')">💸 ወጪ</button>
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
+      <button class="btn-sm-blue" onclick="renderTxns()">🔄 አዘምን</button>
+    </div>
+    <div id="txnList" class="txn-list"></div>
+  </div><!-- /wpanel-txns -->
+
+</div><!-- /walletScreen -->
+
+<!-- ══════════════ RULES ══════════════ -->
+<div id="rulesScreen" class="screen rules-screen">
+  <h2>የጨዋታ ህጎች</h2>
+  <ul class="rules-list">
+    <li>🃏 እያንዳንዱ ተጫዋች ከካርዶቹ አንዱን ይምረጣል</li>
+    <li>🔢 ቁጥሮቹ ከ1–75 ይጠራሉ</li>
+    <li>🔊 ቁጥሩ በአማርኛ ድምፅ ይነበባል</li>
+    <li>✅ ቁጥሩ ሲጠራ ካርድህ ላይ ምልክት ይደረጋል</li>
+    <li>🏆 አንድ ረድፍ ሲሞላ (አግድም፣ ቁልቁል፣ ሰያፍ) ቢንጎ!</li>
+    <li>🎯 ቢንጎ ሲጠራ ጨዋታው ያቆማል</li>
+  </ul>
+  <button class="btn-primary" onclick="showScreen('mainMenu')">◀ ተመለስ</button>
+</div>
+
+<!-- ══════════════ CARD SELECT ══════════════ -->
+<div id="cardSelectScreen" class="screen">
+
+  <!-- Top bar -->
+  <div class="cs-topbar">
+    <button class="btn-back" onclick="showScreen('mainMenu')">◀</button>
+    <h2>ካርድ ምረጡ</h2>
+    <div style="display:flex;gap:6px;align-items:center">
+      <div id="csStatus" class="cs-status">ካርድ ምረጥ — ጠቅ ያድርጉ</div>
+      <button class="btn-logout" onclick="doLogout()" title="ውጣ" style="padding:6px 9px;font-size:.85rem">⏏</button>
+    </div>
+  </div>
+
+  <!-- Balance bar -->
+  <div class="cs-balance-bar">
+    <span>💰 ቀሪ ሂሳብ: <strong id="csBalanceAmt">—</strong></span>
+    <span class="cs-fee-note">| ካርድ: <strong>10 ብር</strong></span>
+    <button class="btn-sm-blue" onclick="openMyAccount()" style="padding:4px 10px;font-size:.75rem;margin-left:auto">💵 ሙላ</button>
+  </div>
+
+  <!-- Selected preview -->
+  <div id="selectedCardPreview" class="selected-preview hidden">
+    <div class="preview-label">✅ የተመረጡ ካርዶች:</div>
+    <div id="previewCardEl"></div>
+  </div>
+
+  <!-- Pool header -->
+  <div class="pool-header">
+    <span id="poolTitle">ካርዶች — ምረጡ:</span>
+    <span class="pool-hint">👆 ጠቅ ያድርጉ</span>
+  </div>
+
+  <!-- Card pool — scrollable -->
+  <div id="cardPool" class="card-pool"></div>
+
+  <!-- Sticky bottom bar -->
+  <div class="cs-bottom">
+    <div class="prize-preview" id="prizePreview">
+      <span class="pp-label">🏆 ሽልማት:</span>
+      <span class="pp-amount" id="prizePreviewAmt">—</span>
+      <span class="pp-fee">| ክፍያ: <strong id="feePreviewAmt">—</strong></span>
+    </div>
+    <div id="csProgress" class="cs-progress"></div>
+    <button class="btn-primary" id="startGameBtn" onclick="launchGame()" disabled
+            style="max-width:100%;width:100%">
+      ▶ ጨዋታ ጀምር
+    </button>
+  </div>
+
+</div>
+
+<!-- ══════════════ GAME SCREEN ══════════════ -->
+<div id="gameScreen" class="screen">
+
+  <!-- ══ BIG NUMBER DISPLAY — TOP OF SCREEN ══ -->
+  <div class="big-number-banner">
+    <div class="bnn-left">
+      <span class="bnn-stat">👥 <strong id="playerCount">0</strong></span>
+      <span class="bnn-stat">📢 <strong id="calledCount">0</strong>/75</span>
+    </div>
+
+    <div class="bnn-center">
+      <div class="bnn-col-badge" id="bnnColBadge">—</div>
+      <div class="bnn-number"    id="calledNumberDigit">—</div>
+      <div class="bnn-amharic"   id="calledNumberAmharic">ቁጥር ይጠበቃል</div>
+    </div>
+
+    <div class="bnn-right">
+      <div class="speed-control">
+        <div class="speed-label-row">
+          <span class="speed-icon">⚡</span>
+          <span id="speedLabel">⚖️ መካከለኛ</span>
+        </div>
+        <input type="range" min="1" max="5" step="1" value="3"
+               id="speedSlider"
+               oninput="setSpeed(this.value)"
+               class="speed-slider"/>
+        <div class="speed-ticks">
+          <span>ፈጣን</span>
+          <span>ዘገምተኛ</span>
+        </div>
+      </div>
+      <div class="bnn-auto-badge" id="autoBadge">⏸ ቆሟል</div>
+    </div>
+  </div>
+
+  <!-- Prize pool + game stats bar -->
+  <div class="prize-banner">
+    <div>
+      <div class="prize-pool-label">🏆 ሽልማት ፈንድ</div>
+      <div class="prize-pool-amount" id="livePrizePool">0 ብር</div>
+    </div>
+    <div style="text-align:center">
+      <div class="prize-pool-label">🎮 ካርዶች</div>
+      <div class="prize-pool-amount" id="liveCardCount">0</div>
+    </div>
+    <div style="text-align:right">
+      <div class="prize-pool-label">👤 ተጫዋቾች</div>
+      <div class="prize-pool-amount" id="livePlayerCount">0</div>
+    </div>
+  </div>
+
+  <!-- Called numbers scroll bar -->
+  <div class="called-numbers-bar">
+    <span class="bar-label">ተጠርተዋል:</span>
+    <div id="calledNumbersList" class="called-list"></div>
+  </div>
+
+  <!-- ══ VOICE STATUS BAR ══ -->
+  <div class="voice-status-bar" id="voiceStatusBar">
+    <span class="vsb-dot" id="voiceDot">⚪</span>
+    <span class="vsb-label" id="voiceStatusLabel">ድምፅ እየፈተሸ ነው...</span>
+    <button class="vsb-test-btn" onclick="runVoiceCheck()">🔊 ሙከራ</button>
+  </div>
+
+  <!-- Game controls -->
+  <div class="game-controls">
+    <button class="btn-call"  id="callBtn"  onclick="callNextNumber()">▶ ቁጥር ጥራ</button>
+    <button class="btn-auto"  id="autoBtn"  onclick="toggleAutoCall()">⏹ ራስ-ሰር አቁም</button>
+    <button class="btn-pause" id="pauseBtn" onclick="togglePause()">⏸ አቁም</button>
+    <button class="btn-bingo"               onclick="declareBingo()">🏆 ቢንጎ!</button>
+    <button class="btn-mute-game" id="muteBtnGame" onclick="toggleMuteBtn()">🔊</button>
+    <button class="btn-voice-test"          onclick="testVoiceNow()" title="ድምፅ ሙከራ">🎙</button>
+    <!-- Cancel during countdown only -->
+    <button class="btn-cancel-countdown" id="cancelCountdownBtn"
+            onclick="cancelCountdown()" style="display:none">❌ ሰርዝ</button>
+    <!-- Stop button — disabled once game starts -->
+    <button class="btn-danger" id="stopGameBtn" onclick="confirmEndGame()" style="display:none">⏹</button>
+  </div>
+
+  <!-- ══ INVITE LINK BAR ══ -->
+  <div class="invite-bar">
+    <span class="invite-label">🔗 ጓደኛ ጋብዝ:</span>
+    <input type="text" id="inviteLinkInput" class="invite-input" readonly
+           onclick="this.select()" placeholder="ሊንክ ይፈጠራል..."/>
+    <button class="btn-copy-link" onclick="copyInviteLink()">📋 ቅዳ</button>
+    <button class="btn-share-link" onclick="shareInviteLink()">📤 አጋራ</button>
+  </div>
+
+  <!-- ══ LIVE CHAT / COMMENT SECTION ══ -->
+  <div class="chat-section">
+    <div class="chat-header">
+      <span class="chat-title">💬 ቀጥታ ውይይት</span>
+      <span class="chat-online" id="chatOnlineCount">👥 1 ተጫዋች</span>
+    </div>
+    <div id="chatMessages" class="chat-messages"></div>
+    <div class="chat-input-row">
+      <button class="btn-chat-mic" id="chatMicBtn" onclick="toggleChatMic()" title="🎤 በድምፅ ይናገሩ">🎤</button>
+      <input type="text" id="chatInput" class="chat-input"
+             placeholder="መልዕክት ይጻፉ..."
+             maxlength="120"
+             onkeydown="if(event.key==='Enter')sendChatMsg()"/>
+      <button class="btn-chat-send" onclick="sendChatMsg()">➤</button>
+    </div>
+    <!-- Quick reaction buttons -->
+    <div class="chat-reactions">
+      <button onclick="sendReaction('🎉')">🎉</button>
+      <button onclick="sendReaction('🏆')">🏆</button>
+      <button onclick="sendReaction('😮')">😮</button>
+      <button onclick="sendReaction('🔥')">🔥</button>
+      <button onclick="sendReaction('👏')">👏</button>
+      <button onclick="sendReaction('😂')">😂</button>
+      <button onclick="sendReaction('❤️')">❤️</button>
+      <button onclick="sendReaction('😢')">😢</button>
+    </div>
+  </div>
+
+  <!-- NUMBER BOARD 1–75 (like real bingo caller) -->
+  <div class="number-board-section">
+    <div class="nb-header">
+      <span class="nb-title">🎲 ቁጥሮች (1–75) — ጠቅ ያድርጉ ለመጥራት</span>
+      <button class="btn-sm-gray" onclick="toggleAutoCall()" id="autoBtnBoard">🔁 ራስ-ሰር</button>
+    </div>
+
+    <!-- Probability mode selector -->
+    <div class="prob-bar">
+      <span class="prob-label">📊 ዕጣ ሁነታ:</span>
+      <button id="prob-pure"     class="prob-btn" onclick="setProbMode('pure')">🎲 ተራ</button>
+      <button id="prob-balanced" class="prob-btn prob-active" onclick="setProbMode('balanced')">⚖️ ሚዛናዊ</button>
+      <button id="prob-hot"      class="prob-btn" onclick="setProbMode('hot')">🔥 ፈጣን</button>
+      <button id="prob-cold"     class="prob-btn" onclick="setProbMode('cold')">❄️ ዘገምተኛ</button>
+      <span class="prob-legend">
+        <span class="dot hot3"></span>ከፍተኛ
+        <span class="dot cold2"></span>ዝቅተኛ
+      </span>
+    </div>
+    <div class="nb-cols">
+      <div class="nb-col-label">B<br><small>1–15</small></div>
+      <div class="nb-col-label">I<br><small>16–30</small></div>
+      <div class="nb-col-label">N<br><small>31–45</small></div>
+      <div class="nb-col-label">G<br><small>46–60</small></div>
+      <div class="nb-col-label">O<br><small>61–75</small></div>
+    </div>
+    <div id="numberBoard" class="number-board"></div>
+  </div>
+
+  <!-- Player cards -->
+  <div class="cards-section">
+    <h3>ካርዶች (<span id="cardsLabel">0</span>)</h3>
+    <div id="cardsGrid" class="cards-grid"></div>
+  </div>
+</div>
+
+<!-- ══════════════ WIN SCREEN ══════════════ -->
+<div id="winScreen" class="screen win-screen">
+  <div class="win-animation">🏆</div>
+  <h1>ቢንጎ!</h1>
+  <p id="winMessage" class="win-msg"></p>
+
+  <!-- ── Winner balance after prize ── -->
+  <div id="winBalanceBar" class="win-balance-bar hidden">
+    <span class="wbb-label">💰 አዲስ ቀሪ ሂሳብ:</span>
+    <span class="wbb-amount" id="winNewBalance">—</span>
+  </div>
+
+  <!-- ── Prize credit panel ── -->
+  <div id="winPrizeCredit" class="win-prize-credit hidden" data-prize="0">
+    <div class="wpc-title">💰 ሽልማት ለአሸናፊ ስጥ</div>
+    <div class="wpc-amount">ሽልማት: <strong id="winPrizeAmount">—</strong> | ካርድ: <strong id="winCardNumber">—</strong></div>
+    <div class="wpc-row">
+      <input type="text" id="winWalletId" placeholder="የደንበኛ መታወቂያ (ለምሳሌ: C001)" class="w-input wpc-input"/>
+      <button id="winCreditBtn" class="btn-deposit wpc-btn" onclick="creditWinner()">💰 ስጥ</button>
+    </div>
+    <div id="winCreditMsg" class="wpc-msg hidden"></div>
+  </div>
+
+  <div id="winCardDisplay" class="win-card-container"></div>
+  <div class="win-actions">
+    <button class="btn-play-again" onclick="goToCardSelect()">🔄 እንደገና ጫወት</button>
+    <button class="btn-share-win"  onclick="shareWinResult()">📤 ውጤት አጋራ</button>
+    <button class="btn-secondary"  onclick="showScreen('mainMenu')">🏠 ዋና ምናሌ</button>
+  </div>
+</div>
+
+<!-- ══════════════ CONFIRM DIALOG ══════════════ -->
+<div id="confirmDialog" class="dialog-overlay hidden">
+  <div class="dialog-box">
+    <p>ጨዋታውን ማቆም ይፈልጋሉ?</p>
+    <button class="btn-danger" onclick="endGame()">አዎ, አቁም</button>
+    <button class="btn-secondary" onclick="hideDialog()">ቀጥል</button>
+  </div>
+</div>
+
+<!-- ══════════════ ADMIN PANEL PASSWORD MODAL ══════════════ -->
+<div id="adminPanelModal" class="dialog-overlay hidden">
+  <div class="dialog-box" style="max-width:340px">
+    <div style="font-size:2.5rem;text-align:center;margin-bottom:4px">🔐</div>
+    <h3 style="text-align:center;margin-bottom:4px;font-size:1.1rem">አስተዳዳሪ ፓነል</h3>
+    <p style="text-align:center;color:var(--muted);font-size:.82rem;margin-bottom:16px">የይለፍ ቃል ያስገቡ</p>
+    <div class="input-group" style="margin-bottom:12px">
+      <span class="input-icon">🔒</span>
+      <input type="password" id="adminPanelPass" class="login-input"
+             placeholder="የይለፍ ቃል"
+             onkeydown="if(event.key==='Enter')submitAdminPanelLogin()"/>
+      <button class="eye-btn" onclick="togglePwd('adminPanelPass',this)">👁</button>
+    </div>
+    <div id="adminPanelError" class="auth-error hidden" style="margin-bottom:12px"></div>
+    <button class="btn-login" id="adminPanelLoginBtn" onclick="submitAdminPanelLogin()">🔓 ግባ</button>
+    <button onclick="closeAdminPanelModal()"
+            style="margin-top:8px;padding:10px;border:none;border-radius:10px;width:100%;cursor:pointer;background:var(--surf2);color:var(--muted);font-size:.9rem;font-weight:600">
+      ሰርዝ
+    </button>
+  </div>
+</div>
+
+<script src="amharic.js"></script>
+<script src="wallet.js"></script>
+<script src="game.js"></script>
+
+<!-- ══ BACKEND STATUS CHECK ══ -->
+<script>
+(function checkBackend() {
+  var el = document.getElementById("backendStatus");
+  if (!el) return;
+
+  // Same logic as wallet.js API_BASE
+  var h = window.location.hostname;
+  var p = window.location.port;
+  var proto = window.location.protocol;
+  var base;
+  if (proto === "file:" || !h) {
+    base = "http://localhost:3001/api";
+  } else if ((h === "localhost" || h === "127.0.0.1") && p === "3001") {
+    base = "/api";
+  } else if (h === "localhost" || h === "127.0.0.1") {
+    base = "http://localhost:3001/api";
+  } else {
+    base = proto + "//" + h + "/api";
+  }
+
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", base + "/health", true);
+  xhr.setRequestHeader("ngrok-skip-browser-warning", "true");
+  xhr.timeout = 6000;
+
+  xhr.onload = function() {
+    try {
+      var d = JSON.parse(xhr.responseText);
+      if (d && d.ok) {
+        el.style.background = "#052e16";
+        el.style.color      = "#22c55e";
+        el.style.border     = "1px solid #166534";
+        el.textContent      = "🟢 Backend ይሰራል — ዝግጁ ነው";
+      } else {
+        setError("⚠️ Backend ምላሽ ሰጥቷል ነገር ግን ስህተት አለ");
+      }
+    } catch(e) { setError("⚠️ Backend ምላሽ ሊነበብ አልቻለም"); }
+  };
+
+  xhr.onerror = xhr.ontimeout = function() {
+    el.style.background = "#450a0a";
+    el.style.color      = "#fca5a5";
+    el.style.border     = "1px solid #7f1d1d";
+    el.innerHTML =
+      "🔴 Backend አልተጀመረም" +
+      "<br><small style='color:#fcd34d'>👉 <strong>start-all.bat</strong> ያስጀምሩ</small>" +
+      "<br><small style='color:#94a3b8'>ወይም: XAMPP MySQL ይሰራ እንደሆነ ያረጋግጡ</small>";
+  };
+
+  function setError(msg) {
+    el.style.background = "#451a03";
+    el.style.color      = "#fdba74";
+    el.style.border     = "1px solid #7c2d12";
+    el.textContent      = msg;
+  }
+
+  xhr.send();
+})();
+</script>
+
+<!-- ══ TELEGRAM VIEWPORT DEBUG PANEL (hidden outside Telegram) ══ -->
+<div id="tgViewportDebug" style="
+  display:none;
+  position:fixed; bottom:0; left:0; right:0;
+  background:rgba(0,0,0,.75); color:#22c55e;
+  font-size:11px; font-family:monospace;
+  padding:4px 10px; z-index:9999;
+  text-align:center; pointer-events:none;
+"></div>
+
+<!-- ══════════════ TELEGRAM WEB APP INIT ══════════════ -->
+<script>
+(function() {
+  var tg = window.Telegram && window.Telegram.WebApp;
+  if (!tg) return;
+
+  tg.ready();
+  tg.expand();
+
+  // ── Viewport height management ───────────────────────────
+  // Telegram injects --tg-viewport-stable-height and --tg-viewport-height
+  // as native CSS variables automatically — no JS calculation needed.
+  // We only need to re-expand if the user collapses the app.
+
+  tg.onEvent('viewportChanged', function(data) {
+    // Re-expand if collapsed
+    if (!tg.isExpanded) tg.expand();
+
+    // Log both heights every change
+    console.log(
+      'viewportChanged | stable:', tg.viewportStableHeight,
+      '| current:', tg.viewportHeight,
+      '| isStateStable:', data.isStateStable
+    );
+
+    if (data.isStateStable) {
+      console.log('✅ Stable height:', tg.viewportStableHeight);
+
+      // Update debug panel if visible
+      var dbg = document.getElementById('tgViewportDebug');
+      if (dbg) {
+        dbg.innerHTML =
+          '📐 stable: <b>' + tg.viewportStableHeight + 'px</b>' +
+          ' | current: <b>' + tg.viewportHeight + 'px</b>' +
+          ' | expanded: <b>' + tg.isExpanded + '</b>';
+      }
+    }
+
+    // Scroll focused input into view when keyboard opens
+    var current = tg.viewportHeight       || window.innerHeight;
+    var stable  = tg.viewportStableHeight || window.innerHeight;
+    if (current < stable - 50) {
+      var focused = document.activeElement;
+      if (focused && focused.tagName === 'INPUT') {
+        setTimeout(function() {
+          focused.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
+      }
+    }
+  });
+
+  // ── Full screen API (Telegram v8.0+) ─────────────────────
+  try { if (tg.requestFullscreen) tg.requestFullscreen(); } catch(e) {}
+
+  // ── Lock portrait orientation ─────────────────────────────
+  try { if (tg.lockOrientation) tg.lockOrientation(); } catch(e) {}
+
+  // ── Disable swipe-down to close ───────────────────────────
+  try { if (tg.disableVerticalSwipes) tg.disableVerticalSwipes(); } catch(e) {}
+
+  // ── Disable closing confirmation (v7.7+) ──────────────────
+  try { if (tg.enableClosingConfirmation) tg.enableClosingConfirmation(); } catch(e) {}
+
+  // ── themeParams — all available keys ─────────────────────
+  // https://core.telegram.org/bots/webapps#themeparams
+  var THEME_MAP = {
+    '--tg-theme-bg-color':            'bg_color',
+    '--tg-theme-secondary-bg-color':  'secondary_bg_color',
+    '--tg-theme-text-color':          'text_color',
+    '--tg-theme-hint-color':          'hint_color',
+    '--tg-theme-link-color':          'link_color',
+    '--tg-theme-button-color':        'button_color',
+    '--tg-theme-button-text-color':   'button_text_color',
+    '--tg-theme-header-bg-color':     'header_bg_color',
+    '--tg-theme-accent-text-color':   'accent_text_color',
+    '--tg-theme-section-bg-color':    'section_bg_color',
+    '--tg-theme-section-header-text-color': 'section_header_text_color',
+    '--tg-theme-subtitle-text-color': 'subtitle_text_color',
+    '--tg-theme-destructive-text-color': 'destructive_text_color',
+  };
+
+  // ── Apply theme to CSS + <html> data attribute ────────────
+  function applyTgTheme() {
+    var tp     = tg.themeParams || {};
+    var scheme = tg.colorScheme || 'dark';
+    var root   = document.documentElement;
+
+    // Set dark/light attribute for CSS selectors
+    root.setAttribute('data-tg-theme', scheme);
+
+    // Inject every themeParam as a CSS variable
+    Object.keys(THEME_MAP).forEach(function(cssVar) {
+      var val = tp[THEME_MAP[cssVar]];
+      if (val) root.style.setProperty(cssVar, val);
+    });
+
+    // Prevent white flash — sync body bg immediately
+    if (tp.bg_color) {
+      document.body.style.background    = tp.bg_color;
+      document.body.style.color         = tp.text_color || '';
+    }
+
+    // Update MainButton color from themeParams
+    try {
+      if (tp.button_color)      tg.MainButton.setParams({ color: tp.button_color });
+      if (tp.button_text_color) tg.MainButton.setParams({ text_color: tp.button_text_color });
+    } catch(e) {}
+
+    console.log('🎨 TG version:', tg.version,
+                '| scheme:', scheme,
+                '| themeParams:', JSON.stringify(tp));
+  }
+
+  applyTgTheme();
+  tg.onEvent('themeChanged', applyTgTheme);
+
+  // ── Auto-login with Telegram user data ───────────────────
+  var user = tg.initDataUnsafe && tg.initDataUnsafe.user;
+  if (user) {
+    var phone = "tg_" + user.id;
+    var name  = ((user.first_name || '') +
+                 (user.last_name  ? ' ' + user.last_name : '')).trim()
+                || user.username || phone;
+
+    var lp    = document.getElementById("loginPhone");
+    var lpass = document.getElementById("loginPass");
+    if (lp)    lp.value    = phone;
+    if (lpass) lpass.value = String(user.id).slice(-4);
+
+    var users = {};
+    try { users = JSON.parse(localStorage.getItem("bingoUsers") || "{}"); } catch(e){}
+
+    if (!users[phone]) {
+      var h = 5381, ps = String(user.id);
+      for (var i = 0; i < ps.length; i++) { h = ((h<<5)+h)+ps.charCodeAt(i); h=h&h; }
+      users[phone] = {
+        name: name, phone: phone, pass: (h>>>0).toString(16),
+        balance: 0, history: [],
+        tgId: user.id, tgUsername: user.username || '',
+        createdAt: new Date().toLocaleString()
+      };
+      localStorage.setItem("bingoUsers", JSON.stringify(users));
+
+      var wd = {};
+      try { wd = JSON.parse(localStorage.getItem("bingoWallet") || "{}"); } catch(e){}
+      wd[phone] = {
+        id: phone, name: name, balance: 10,
+        history: [{ id: Date.now(), type:"deposit", amount:10,
+          note:"🎁 Telegram ምዝገባ ቦነስ",
+          date: new Date().toLocaleString(), before:0, balance:10 }],
+        stats: { gamesPlayed:0, gamesWon:0, totalSpent:0, totalWon:0 }
+      };
+      localStorage.setItem("bingoWallet", JSON.stringify(wd));
+    }
+
+    if (typeof loginSuccess === "function") loginSuccess(users[phone]);
+
+    var nameEl  = document.getElementById("userBarName");
+    var phoneEl = document.getElementById("userBarPhone");
+    if (nameEl)  nameEl.textContent  = name;
+    if (phoneEl) phoneEl.textContent = user.username ? "@" + user.username : "Telegram";
+  }
+
+  // ── Back button ───────────────────────────────────────────
+  tg.BackButton.onClick(function() {
+    var active = document.querySelector(".screen.active");
+    if (active && active.id !== "mainMenu") {
+      if (typeof showScreen === "function") showScreen("mainMenu");
+    } else {
+      tg.close();
+    }
+  });
+
+  // ── Main button — "ጨዋታ ጀምር" on card select screen ───────
+  tg.MainButton.setText("▶ ጨዋታ ጀምር");
+
+  var _origShowScreen = window.showScreen;
+  window.showScreen = function(id) {
+    if (typeof _origShowScreen === "function") _origShowScreen(id);
+    if (id === "cardSelectScreen") {
+      tg.MainButton.show();
+      tg.MainButton.onClick(function() {
+        if (typeof launchGame === "function") launchGame();
+      });
+    } else {
+      tg.MainButton.hide();
+    }
+    if (id !== "mainMenu" && id !== "loginScreen") {
+      tg.BackButton.show();
+    } else {
+      tg.BackButton.hide();
+    }
+  };
+
+  // ── Haptic feedback on bingo win ─────────────────────────
+  var _origTriggerWin = window.triggerWin;
+  window.triggerWin = function(winners) {
+    if (typeof _origTriggerWin === "function") _origTriggerWin(winners);
+    try { tg.HapticFeedback.notificationOccurred("success"); } catch(e){}
+  };
+
+  console.log("✅ Telegram Web App v" + tg.version + " ready.");
+
+  // ── Show viewport debug panel ─────────────────────────────
+  var dbg = document.getElementById('tgViewportDebug');
+  if (dbg) {
+    dbg.style.display = 'block';
+    dbg.innerHTML =
+      '📐 stable: <b>' + tg.viewportStableHeight + 'px</b>' +
+      ' | current: <b>' + tg.viewportHeight + 'px</b>' +
+      ' | v' + tg.version +
+      ' | ' + (tg.colorScheme || 'dark');
+  }
+})();
+</script>
+</body>
+</html>

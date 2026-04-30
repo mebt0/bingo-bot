@@ -1,0 +1,13 @@
+{
+  "name": "adwa-bingo",
+  "version": "1.0.0",
+  "description": "Adwa Bingo Game — Backend + Telegram Bot",
+  "scripts": {
+    "start":       "node backend/server.js",
+    "start:bot":   "node bingo-bot/src/index.js",
+    "backend":     "node backend/server.js",
+    "bot":         "node bingo-bot/src/index.js",
+    "setup:db":    "node backend/setup-database.js",
+    "ngrok:url":   "node update-ngrok-url.js"
+  }
+}

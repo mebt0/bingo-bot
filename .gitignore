@@ -1,0 +1,26 @@
+# ── Node modules ─────────────────────────────────────────────
+node_modules/
+backend/node_modules/
+bingo-bot/node_modules/
+
+# ── Environment files (contain secrets) ──────────────────────
+backend/.env
+bingo-bot/.env
+
+# ── Logs ─────────────────────────────────────────────────────
+*.log
+npm-debug.log*
+backend_out.txt
+backend_err.txt
+
+# ── SQLite databases ──────────────────────────────────────────
+*.db
+*.sqlite
+bingo-bot/data/
+
+# ── OS files ─────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── VS Code ───────────────────────────────────────────────────
+.vscode/
