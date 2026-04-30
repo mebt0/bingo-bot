@@ -57,6 +57,29 @@ function endGame(){
   flashMessage("⏹ ጨዋታ ቆሟል", "#ef4444");
   showScreen("mainMenu");
 }
+
+// ── Hide/show game controls based on admin status ─────────────
+function applyGameControlVisibility() {
+  var isAdmin = currentUserIsAdmin();
+  // Buttons only admin can use
+  var adminOnly = ["callBtn", "autoBtn", "pauseBtn", "stopGameBtn",
+                   "cancelCountdownBtn", "autoBtnBoard"];
+  adminOnly.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    if (!isAdmin) {
+      el.style.display = "none";
+    }
+    // stopGameBtn and cancelCountdownBtn have their own show/hide logic — skip
+  });
+  // Number board cells — disable for non-admins
+  var board = document.getElementById("numberBoard");
+  if (board) {
+    board.querySelectorAll(".nb-btn").forEach(function(btn) {
+      if (!isAdmin) btn.disabled = true;
+    });
+  }
+}
 function flashMessage(msg,color){var el=document.createElement("div");el.className="flash-msg";el.style.background=color||"#6366f1";el.textContent=msg;document.body.appendChild(el);setTimeout(function(){el.remove();},2800);}
 
 function changePlayerCount(delta){playerCount=Math.max(1,Math.min(400,playerCount+delta));document.getElementById("playerCountDisplay").textContent=playerCount;}
@@ -94,7 +117,18 @@ function goToCardSelect(){
     updatePrizePreview();
 
     var startBtn = document.getElementById("startGameBtn");
-    if(startBtn){ startBtn.disabled=true; startBtn.classList.remove("btn-ready"); }
+    if(startBtn){
+      if(currentUserIsAdmin()){
+        startBtn.style.display = "";
+        startBtn.disabled = true;
+        startBtn.classList.remove("btn-ready");
+      } else {
+        // Non-admin: hide start button, show waiting message
+        startBtn.style.display = "none";
+        var prog = document.getElementById("csProgress");
+        if(prog) prog.innerHTML = '<span class="prog-count" style="color:#f59e0b">⏳ አስተዳዳሪ ጨዋታ ሲጀምር ይጠብቁ...</span>';
+      }
+    }
 
     // Balance display
     var csBalEl = document.getElementById("csBalanceAmt");
@@ -234,9 +268,9 @@ function selectCard(cardId){
   updateSelectedPreview();
   updatePrizePreview();
 
-  // Enable/disable start button
+  // Enable/disable start button (admin only)
   var btn = document.getElementById("startGameBtn");
-  if(btn){
+  if(btn && currentUserIsAdmin()){
     if(totalCards > 0){
       btn.disabled = false;
       btn.classList.add("btn-ready");
@@ -292,6 +326,10 @@ function cancelCountdown() {
 }
 
 function launchGame(){
+  if(!currentUserIsAdmin()){
+    flashMessage("❌ ጨዋታ መጀመር የሚችሉት አስተዳዳሪ ብቻ ነው", "#ef4444");
+    return;
+  }
   clearTimeout(autoLoopTimer);
 
   // ── ENTRY FEE DEDUCTION ───────────────────────────────────
@@ -361,6 +399,7 @@ function _launchGameAfterFee(totalCards) {
 
   buildWeights(); setProbMode(probMode); buildNumberBoard(); renderCards();
   showScreen("gameScreen"); updateAutoBadge();
+  applyGameControlVisibility(); // hide controls from non-admins
 
   // ── 30-second countdown ───────────────────────────────────
   var secondsLeft = 30;
@@ -509,6 +548,7 @@ function scheduleNext(){
 
 function callSpecificNumber(num){
   if(!gameActive||isPaused)return;
+  if(!currentUserIsAdmin()){flashMessage("❌ አስተዳዳሪ ብቻ ቁጥር መጥራት ይችላሉ","#ef4444");return;}
   if(calledNumbers.indexOf(num)!==-1)return;
   clearTimeout(autoLoopTimer);
   remainingNums=remainingNums.filter(function(n){return n!==num;});
@@ -518,6 +558,7 @@ function callSpecificNumber(num){
 
 function callNextNumber(){
   if(!gameActive||isPaused)return;
+  if(!currentUserIsAdmin()){flashMessage("❌ አስተዳዳሪ ብቻ ቁጥር መጥራት ይችላሉ","#ef4444");return;}
   if(remainingNums.length===0){speakAmharic("ሁሉም ቁጥሮች ተጠርተዋል። ጨዋታ አልቋል።",true);flashMessage("ሁሉም ቁጥሮች ተጠሩ!","#f59e0b");autoMode=false;updateAutoBadge();return;}
   clearTimeout(autoLoopTimer);
   buildWeights();
@@ -644,6 +685,7 @@ function updateAutoBadge(){
 
 function togglePause(){
   if(!gameActive)return;
+  if(!currentUserIsAdmin()){flashMessage("❌ አስተዳዳሪ ብቻ ጨዋታ ማቆም ይችላሉ","#ef4444");return;}
   isPaused=!isPaused;
   var btn=document.getElementById("pauseBtn");
   if(isPaused){btn.innerHTML="▶ ቀጥል";clearTimeout(autoLoopTimer);SFX.pause();speakDirect("ጨዋታ ቆሟል");}
@@ -653,6 +695,7 @@ function togglePause(){
 
 function toggleAutoCall(){
   if(!gameActive)return;
+  if(!currentUserIsAdmin()){flashMessage("❌ አስተዳዳሪ ብቻ ራስ-ሰር ማቆም ይችላሉ","#ef4444");return;}
   autoMode=!autoMode;
   var label=autoMode?"⏹ ራስ-ሰር አቁም":"🔁 ራስ-ሰር";
   document.getElementById("autoBtn").innerHTML=label;
