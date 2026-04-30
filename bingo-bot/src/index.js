@@ -1,30 +1,54 @@
-require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
-
 const { Telegraf, Markup } = require("telegraf");
 
-const BOT_TOKEN = process.env.BOT_TOKEN;
-if (!BOT_TOKEN) {
-  console.error("❌ BOT_TOKEN is missing in bingo-bot/.env");
-  process.exit(1);
-}
+const bot = new Telegraf("8024604530:AAEr5lqr7yfBUWw38DQnDi3Ve4KWukMA6Qo");
 
-const WEB_APP_URL = process.env.WEB_APP_URL || "https://strobe-anteater-pancake.ngrok-free.dev";
-
-const bot = new Telegraf(BOT_TOKEN);
-
-// Start command
+// ===== START MENU =====
 bot.start((ctx) => {
   ctx.reply(
-    "🎮 Open Mini App",
-    Markup.inlineKeyboard([
-      Markup.button.webApp("🚀 Open App", WEB_APP_URL)
+    "🎮 Main Menu",
+    Markup.keyboard([
+      ["🎮 Open Game / ጨዋታ"],
+      ["💳 Deposit / ተከፍል", "💰 Balance / ቀሪ"],
+      ["🏧 Withdraw / ውጣ", "📜 History / ታሪክ"],
+      ["👤 Profile / መገለጫ", "🏢 Support / ድጋፍ"]
     ])
+      .resize()
+      .persistent()
   );
 });
 
-bot.launch();
-console.log("✅ Bot running...");
-console.log("🌐 Web App URL:", WEB_APP_URL);
 
-process.once("SIGINT",  () => bot.stop("SIGINT"));
-process.once("SIGTERM", () => bot.stop("SIGTERM"));
+// ===== BUTTON ACTIONS =====
+bot.hears("🎮 Open Game / ጨዋታ", (ctx) => {
+  ctx.reply("Game is starting...");
+});
+
+bot.hears("💳 Deposit / ተከፍል", (ctx) => {
+  ctx.reply("Deposit system coming soon 💳");
+});
+
+bot.hears("💰 Balance / ቀሪ", (ctx) => {
+  ctx.reply("Your balance is: 0 ETB");
+});
+
+bot.hears("🏧 Withdraw / ውጣ", (ctx) => {
+  ctx.reply("Withdraw request started 🏧");
+});
+
+bot.hears("📜 History / ታሪክ", (ctx) => {
+  ctx.reply("No history yet 📜");
+});
+
+bot.hears("👤 Profile / መገለጫ", (ctx) => {
+  ctx.reply(`👤 Name: ${ctx.from.first_name}`);
+});
+
+bot.hears("🏢 Support / ድጋፍ", (ctx) => {
+  ctx.reply("Contact support: @your_support_username");
+});
+
+
+// ===== START BOT =====
+bot.launch();
+
+console.log("Bot is running...");

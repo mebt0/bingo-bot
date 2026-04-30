@@ -1230,6 +1230,79 @@ button:disabled { opacity:.4; cursor:not-allowed; transform:none; }
   color: #334155;
 }
 
+.app-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  align-items: stretch;
+  padding: 14px;
+  background: rgba(15, 23, 42, 0.95);
+  border-top: 1px solid rgba(255,255,255,.08);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+}
+.footer-panel,
+.footer-cta {
+  border-radius: 18px;
+  background: rgba(26, 32, 44, 0.95);
+  border: 1px solid rgba(255,255,255,.08);
+  color: #f8fafc;
+}
+.footer-panel {
+  flex: 1 1 180px;
+  min-width: 180px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.footer-panel-label {
+  font-size: .82rem;
+  color: #94a3b8;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.footer-panel-value {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #e2e8f0;
+}
+.footer-panel-btn {
+  padding: 10px 12px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #0ea5e9, #2563eb);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+.footer-panel-btn:hover {
+  transform: translateY(-1px);
+}
+.footer-cta {
+  flex: 2 1 280px;
+  min-width: 260px;
+  padding: 16px 18px;
+  font-size: .95rem;
+  font-weight: 800;
+  text-align: center;
+  color: #fff;
+  background: linear-gradient(135deg, #f59e0b, #ea580c);
+  box-shadow: 0 8px 24px rgba(245,158,11,.24);
+  cursor: pointer;
+}
+.footer-cta:hover {
+  transform: translateY(-1px);
+}
+@media (max-width: 720px) {
+  .app-footer {
+    flex-direction: column;
+  }
+  .footer-cta {
+    min-width: auto;
+  }
+}
+
 /* ══════════════════════════════════════════════════════════
    USER BAR — top of main menu
    ══════════════════════════════════════════════════════════ */
