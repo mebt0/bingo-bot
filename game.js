@@ -111,28 +111,31 @@ function goToCardSelect(){
   // Generate 400 cards for the pool
   for(var i=1;i<=400;i++) poolCards.push(generateCard(i));
 
-  // Auto-select ALL 400 cards for player 0
-  playerCards[0] = poolCards.slice(); // all 400
+  // Do NOT auto-select — user picks 1 card (shown as red when selected)
+  // playerCards[0] starts empty — all cards show green
 
-  // Always show card select screen with all 400 pre-selected (orange)
   showScreen("cardSelectScreen");
 
   setTimeout(function() {
     buildPlayerTabs();
-    renderCardPool(); // all 400 show as orange (selected)
+    renderCardPool();
     updateCsStatus();
     updatePrizePreview();
+
+    // Hide selected bar initially
+    var selBar = document.getElementById("csSelectedBar");
+    if(selBar) selBar.style.display = "none";
 
     var startBtn = document.getElementById("startGameBtn");
     if(startBtn){
       if(currentUserIsAdmin()){
         startBtn.style.display = "";
-        startBtn.disabled = false;
-        startBtn.classList.add("btn-ready");
+        startBtn.disabled = true;
+        startBtn.classList.remove("btn-ready");
       } else {
         startBtn.style.display = "none";
         var prog = document.getElementById("csProgress");
-        if(prog) prog.innerHTML = '<span class="prog-count" style="color:#f59e0b">⏳ አስተዳዳሪ ጨዋታ ሲጀምር ይጠብቁ...</span>';
+        if(prog) prog.innerHTML = '<span class="prog-count" style="color:#f59e0b">⏳ ካርድ ምረጡ — ጠቅ ያድርጉ</span>';
       }
     }
 
@@ -152,10 +155,6 @@ function goToCardSelect(){
 
     var pool = document.getElementById("cardPool");
     if(pool) pool.scrollTop = 0;
-
-    // Reset selected card bar
-    var selBar = document.getElementById("csSelectedBar");
-    if(selBar) selBar.style.display = "none";
   }, 50);
 
   speakAmharic("ካርድ ምረጡ", true);
@@ -218,35 +217,26 @@ function renderCardPool(){
 }
 
 function selectCard(cardId){
-  // Non-admins cannot change card selection — all 400 are pre-selected
-  if(!currentUserIsAdmin()) return;
-
   var card = poolCards.find(function(c){ return c.id === cardId; });
-  if(!card) { console.error("Card not found:", cardId); return; }
+  if(!card) return;
 
   if(!playerCards[currentPlayer]) playerCards[currentPlayer] = [];
   var chosen = playerCards[currentPlayer];
 
   var idx = chosen.findIndex(function(c){ return c.id === cardId; });
   if(idx !== -1){
-    // Deselect
+    // Deselect — turns green again
     chosen.splice(idx, 1);
-    try { speakAmharic("ካርድ "+getAmharicName(cardId)+" ተወገደ", true); } catch(e){}
   } else {
-    // Max 1 card per user — deselect previous first
+    // Select — max 1 card, deselect previous
     chosen.length = 0;
     chosen.push(card);
     try { SFX.number(); } catch(e){}
-    try { speakAmharic("ካርድ "+getAmharicName(cardId)+" ተመረጠ", true); } catch(e){}
   }
 
   playerCards[currentPlayer] = chosen;
 
-  // Count total selected
-  var totalCards = 0;
-  for(var i = 0; i < playerCount; i++) totalCards += (playerCards[i] || []).length;
-
-  // Update selected card display bar
+  // Show/hide selected card bar below grid
   var selBar = document.getElementById("csSelectedBar");
   var selNum = document.getElementById("csSelectedNum");
   if(selBar && selNum){
@@ -255,16 +245,18 @@ function selectCard(cardId){
       selNum.textContent   = "#" + chosen[0].id;
     } else {
       selBar.style.display = "none";
-      selNum.textContent   = "—";
     }
   }
 
-  // Update UI
+  // Count total selected
+  var totalCards = 0;
+  for(var i = 0; i < playerCount; i++) totalCards += (playerCards[i] || []).length;
+
   updateCsStatus();
   renderCardPool();
   updatePrizePreview();
 
-  // Enable/disable start button (admin only)
+  // Enable start button for admin when at least 1 card selected
   var btn = document.getElementById("startGameBtn");
   if(btn && currentUserIsAdmin()){
     if(totalCards > 0){
@@ -340,9 +332,9 @@ function launchGame(){
   }
   clearTimeout(autoLoopTimer);
 
-  // ── ENTRY FEE DEDUCTION ───────────────────────────────────
-  var totalCards = 0;
-  for (var p = 0; p < playerCount; p++) totalCards += (playerCards[p] || []).length;
+  // Use ALL 400 pool cards for the game (regardless of what admin selected)
+  playerCards[0] = poolCards.slice();
+  var totalCards = 400;
 
   if (currentUser) {
     deductEntryFee(currentUser.phone, totalCards, function(feeResult) {
